@@ -71,11 +71,24 @@ function renderPlayers() {
                 <details class="section">
                     <summary>Username History (${usernames.length})</summary>
                     <div class="alt-entry">
-                        ${usernames.map(entry => `
-                            <div class="alt-row">
-                                <div>${entry.username}</div>
-                            </div>
-                        `).join("")}
+                        ${usernames.map(entry => {
+                            // Crafty API uses changedAt; fall back to other common field names
+                            const raw = entry.changedAt ?? entry.changed_at ?? entry.timestamp ?? entry.time ?? null;
+                            let dateStr = "";
+                            if (raw) {
+                                // Handle both Unix seconds and milliseconds
+                                const ms = raw > 1e10 ? raw : raw * 1000;
+                                dateStr = new Date(ms).toLocaleDateString(undefined, {
+                                    year: "numeric", month: "short", day: "numeric"
+                                });
+                            }
+                            return `
+                                <div class="alt-row" style="justify-content: space-between;">
+                                    <div>${entry.username}</div>
+                                    ${dateStr ? `<div class="uuid">${dateStr}</div>` : ""}
+                                </div>
+                            `;
+                        }).join("")}
                     </div>
                 </details>
             `;
