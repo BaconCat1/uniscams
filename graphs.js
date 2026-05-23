@@ -339,6 +339,149 @@ function renderStats() {
     }
 
     /* ========================================================
+       ALT ASSOCIATION GRAPH
+       ======================================================== */
+
+    const altBars = document.getElementById("altBars");
+
+    if (altBars) {
+
+        altBars.innerHTML =
+            "<canvas id='canvasAlts' width='500' height='290'></canvas>";
+
+        const cAlts =
+            document.getElementById("canvasAlts");
+
+        const ctxAlts =
+            cAlts.getContext("2d");
+
+        const altMetrics = {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5+": 0
+        };
+
+        // Count alt associations per main account
+        data.uuids.forEach(uuid => {
+
+            let altCount = 0;
+
+            // Automatic alt map
+            if (data.altMap[uuid]) {
+                altCount += data.altMap[uuid].length;
+            }
+
+            // Manual alt map
+            if (data.manualAlts &&
+                data.manualAlts[uuid]) {
+
+                altCount +=
+                    data.manualAlts[uuid].length;
+            }
+
+            if (altCount >= 5) {
+
+                altMetrics["5+"]++;
+
+            } else {
+
+                altMetrics[String(altCount)]++;
+            }
+        });
+
+        const altEntries =
+            Object.entries(altMetrics).map(
+                ([label, val]) => ({
+                    label,
+                    val
+                })
+            );
+
+        let maxAltMetric = 0;
+
+        altEntries.forEach(entry => {
+
+            if (entry.val > maxAltMetric) {
+                maxAltMetric = entry.val;
+            }
+        });
+
+        const altBarW =
+            cAlts.width /
+            altEntries.length;
+
+        altEntries.forEach((m, i) => {
+
+            const h =
+                (m.val / (maxAltMetric || 1)) * 170;
+
+            const x =
+                i * altBarW + 20;
+
+            const y =
+                240 - h;
+
+            // Bar
+            ctxAlts.fillStyle = "#E91E63";
+
+            ctxAlts.fillRect(
+                x,
+                y,
+                altBarW - 40,
+                h
+            );
+
+            // Value text
+            ctxAlts.fillStyle = "#FFFFFF";
+            ctxAlts.font = "14px Arial";
+            ctxAlts.textAlign = "center";
+
+            ctxAlts.fillText(
+                m.val,
+                x + (altBarW - 40) / 2,
+                y - 8
+            );
+
+            // Label
+            ctxAlts.fillStyle = "#CCCCCC";
+            ctxAlts.font = "12px Arial";
+
+            ctxAlts.fillText(
+                m.label,
+                x + (altBarW - 40) / 2,
+                270
+            );
+        });
+
+        cAlts.onmousemove = e => {
+
+            const rect =
+                cAlts.getBoundingClientRect();
+
+            const idx = Math.floor(
+                (e.clientX - rect.left) /
+                altBarW
+            );
+
+            const metric =
+                altEntries[idx];
+
+            if (!metric) return;
+
+            showTip(
+                `${metric.label} alts: ${metric.val}`,
+                e.clientX + 15,
+                e.clientY + 15
+            );
+        };
+
+        cAlts.onmouseout = hideTip;
+    }
+
+    /* ========================================================
        SERVER DISTRIBUTION GRAPH
        ======================================================== */
 
