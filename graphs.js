@@ -12,6 +12,7 @@ let tooltip;
 function showTip(text, x, y) {
     if (!tooltip) {
         tooltip = document.createElement("div");
+
         tooltip.style = `
             position: fixed;
             background: rgba(0,0,0,0.85);
@@ -23,6 +24,7 @@ function showTip(text, x, y) {
             z-index: 99999;
             transition: opacity 0.1s ease;
         `;
+
         document.body.appendChild(tooltip);
     }
 
@@ -33,7 +35,9 @@ function showTip(text, x, y) {
 }
 
 function hideTip() {
-    if (tooltip) tooltip.style.opacity = "0";
+    if (tooltip) {
+        tooltip.style.opacity = "0";
+    }
 }
 
 function renderStats() {
@@ -43,7 +47,7 @@ function renderStats() {
 
     // Pull the shared data exposed from app.js
     const playerMap = window.players || new Map();
-    
+
     // Target the text container instead of destroying canvas mounting wrappers
     const textContainer = document.getElementById("statsText");
 
@@ -54,6 +58,7 @@ function renderStats() {
     /* ========================================================
        DATA PARSING ENGINE
        ======================================================== */
+
     let totalLinkedAlts = 0;
     let absoluteScammers = data.uuids.length;
 
@@ -85,6 +90,7 @@ function renderStats() {
     /* ========================================================
        DATASET PROPERTIES BAR GRAPH
        ======================================================== */
+
     const statsBars = document.getElementById("statsBars");
 
     if (!statsBars) return;
@@ -98,18 +104,15 @@ function renderStats() {
     const metrics = [
         {
             label: "Mains",
-            val: absoluteScammers,
-            color: "#e57373"
+            val: absoluteScammers
         },
         {
             label: "Alts",
-            val: totalLinkedAlts,
-            color: "#81c784"
+            val: totalLinkedAlts
         },
         {
             label: "Discords",
-            val: discordCount,
-            color: "#64b5f6"
+            val: discordCount
         }
     ];
 
@@ -130,7 +133,8 @@ function renderStats() {
         const y = 240 - h;
 
         // Bar
-        ctxStats.fillStyle = m.color;
+        ctxStats.fillStyle = "#9C27B0";
+
         ctxStats.fillRect(
             x,
             y,
@@ -185,6 +189,7 @@ function renderStats() {
     /* ========================================================
        SERVER DISTRIBUTION GRAPH
        ======================================================== */
+
     const serverBars = document.getElementById("serverBars");
 
     if (!serverBars) return;
@@ -233,7 +238,7 @@ function renderStats() {
         const h = (v / (maxS || 1)) * 170;
 
         const x = padding + i * (barW + gap);
-        const y = 220 - h;
+        const y = 240 - h;
 
         // Bar
         ctxServers.fillStyle = "#2196F3";
