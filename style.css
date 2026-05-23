@@ -227,3 +227,16 @@ details.section summary {
     border-left: 4px solid #ff4444;
     background: linear-gradient(145deg, #1e1515, #141414);
 }
+.server-badge-link {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.server-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.12);
+}

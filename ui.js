@@ -61,6 +61,24 @@ function renderPlayers() {
         const card = document.createElement("div");
         card.className = "player";
         const head = `https://mc-heads.net/head/${mainUuid}.png`;
+		
+		// --- Server Badge ---
+		const serverTag = serverTags[mainUuid];
+		let serverBadgeHTML = "";
+
+		if (serverTag?.img) {
+			serverBadgeHTML = `
+				<a href="${serverTag.link || "#"}"
+				   target="_blank"
+				   class="server-badge-link">
+					<img
+						src="${serverTag.img}"
+						class="server-badge"
+						alt="Server Badge"
+					>
+				</a>
+			`;
+		}
 
         // --- Username History ---
         const usernames = main.usernames || [];
@@ -180,12 +198,15 @@ function renderPlayers() {
 
         card.innerHTML = `
             <div class="player-header">
-                <img src="${head}" width="64" height="64" style="border-radius:4px;">
-                <div>
-                    <div class="username">${main.username}</div>
-                    <div class="uuid">${main.uuid}</div>
-                </div>
-            </div>
+				<img src="${head}" width="64" height="64" style="border-radius:4px;">
+
+				<div style="flex:1;">
+					<div class="username">${main.username}</div>
+					<div class="uuid">${main.uuid}</div>
+				</div>
+
+				${serverBadgeHTML}
+			</div>
             ${knownAltHTML}
             ${manualAltHTML}
             ${discordHTML}
