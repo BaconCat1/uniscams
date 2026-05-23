@@ -45,46 +45,51 @@ function renderStats() {
     
     // Target the text container instead of destroying canvas mounting wrappers
     const textContainer = document.getElementById("statsText");
-    if (textContainer) textContainer.innerHTML = "";
 
-/* ========================================================
-   DATA PARSING ENGINE
-   ======================================================== */
-let totalLinkedAlts = 0;
-let absoluteScammers = data.uuids.length;
+    if (textContainer) {
+        textContainer.innerHTML = "";
+    }
 
-// System detected alts
-Object.values(data.altMap).forEach(arr => {
-    totalLinkedAlts += arr.length;
-});
+    /* ========================================================
+       DATA PARSING ENGINE
+       ======================================================== */
+    let totalLinkedAlts = 0;
+    let absoluteScammers = data.uuids.length;
 
-// Manual alts from data.json
-Object.values(data.manualAlts || {}).forEach(arr => {
-    totalLinkedAlts += arr.length;
-});
+    // System detected alts
+    Object.values(data.altMap).forEach(arr => {
+        totalLinkedAlts += arr.length;
+    });
 
-let discordCount = 0;
+    // Manual alts from data.json
+    Object.values(data.manualAlts || {}).forEach(arr => {
+        totalLinkedAlts += arr.length;
+    });
 
-Object.values(data.discordLinks).forEach(arr => {
-    discordCount += arr.length;
-});
+    let discordCount = 0;
 
-// Build metrics report paragraph strings
-if (textContainer) {
-    textContainer.innerHTML = `
-        <p>• <strong>Mains:</strong> ${absoluteScammers}</p>
-        <p>• <strong>Alts:</strong> ${totalLinkedAlts}</p>
-        <p>• <strong>Discords:</strong> ${discordCount}</p>
-    `;
-}
+    Object.values(data.discordLinks).forEach(arr => {
+        discordCount += arr.length;
+    });
+
+    // Build metrics report paragraph strings
+    if (textContainer) {
+        textContainer.innerHTML = `
+            <p>• <strong>Mains:</strong> ${absoluteScammers}</p>
+            <p>• <strong>Alts:</strong> ${totalLinkedAlts}</p>
+            <p>• <strong>Discords:</strong> ${discordCount}</p>
+        `;
+    }
 
     /* ========================================================
        DATASET PROPERTIES BAR GRAPH
        ======================================================== */
     const statsBars = document.getElementById("statsBars");
+
     if (!statsBars) return;
 
-    statsBars.innerHTML = "<canvas id='canvasStats' width='500' height='290'></canvas>";
+    statsBars.innerHTML =
+        "<canvas id='canvasStats' width='500' height='290'></canvas>";
 
     const cStats = document.getElementById("canvasStats");
     const ctxStats = cStats.getContext("2d");
@@ -108,8 +113,11 @@ if (textContainer) {
     ];
 
     let maxMetric = 0;
+
     metrics.forEach(m => {
-        if (m.val > maxMetric) maxMetric = m.val;
+        if (m.val > maxMetric) {
+            maxMetric = m.val;
+        }
     });
 
     ctxStats.fillStyle = "#ffffff";
@@ -120,6 +128,7 @@ if (textContainer) {
 
     metrics.forEach((m, i) => {
         const h = (m.val / (maxMetric || 1)) * 200;
+
         const x = i * statsBarW + 40;
         const y = 240 - h;
 
@@ -131,6 +140,7 @@ if (textContainer) {
         ctxStats.fillStyle = "#FFFFFF";
         ctxStats.font = "14px Arial";
         ctxStats.textAlign = "center";
+
         ctxStats.fillText(
             m.val,
             x + (statsBarW - 80) / 2,
@@ -142,12 +152,21 @@ if (textContainer) {
         ctxStats.font = "12px Arial";
 
         const labelX = x + (statsBarW - 80) / 2;
-        ctxStats.fillText(m.label, labelX, 270);
+
+        ctxStats.fillText(
+            m.label,
+            labelX,
+            270
+        );
     });
 
     cStats.onmousemove = e => {
         const rect = cStats.getBoundingClientRect();
-        const idx = Math.floor((e.clientX - rect.left) / statsBarW);
+
+        const idx = Math.floor(
+            (e.clientX - rect.left) / statsBarW
+        );
+
         const metric = metrics[idx];
 
         if (!metric) return;
@@ -165,9 +184,11 @@ if (textContainer) {
        SERVER DISTRIBUTION GRAPH
        ======================================================== */
     const serverBars = document.getElementById("serverBars");
+
     if (!serverBars) return;
 
-    serverBars.innerHTML = "<canvas id='canvasServers' width='500' height='290'></canvas>";
+    serverBars.innerHTML =
+        "<canvas id='canvasServers' width='500' height='290'></canvas>";
 
     const cServers = document.getElementById("canvasServers");
     const ctxServers = cServers.getContext("2d");
@@ -190,46 +211,79 @@ if (textContainer) {
     let maxS = 0;
 
     entries.forEach(([_, v]) => {
-        if (v > maxS) maxS = v;
+        if (v > maxS) {
+            maxS = v;
+        }
     });
 
     ctxServers.fillStyle = "#ffffff";
     ctxServers.font = "14px Arial";
-    ctxServers.fillText("Distribution Across Server Landscapes", 10, 25);
 
-    const barW = cServers.width / (entries.length || 1);
+    ctxServers.fillText(
+        "Distribution Across Server Landscapes",
+        10,
+        25
+    );
+
+    const padding = 40;
+    const gap = 20;
+
+    const usableWidth = cServers.width - padding * 2;
+
+    const barW = Math.min(
+        120,
+        (usableWidth - (entries.length - 1) * gap) /
+        (entries.length || 1)
+    );
 
     entries.forEach(([imgSrc, v], i) => {
         const h = (v / (maxS || 1)) * 200;
-        const x = i * barW + 40;
+
+        const x = padding + i * (barW + gap);
         const y = 240 - h;
 
+        // Bar
         ctxServers.fillStyle = "#2196F3";
-        ctxServers.fillRect(x, y, barW - 80, h);
+        ctxServers.fillRect(x, y, barW, h);
 
+        // Value text
         ctxServers.fillStyle = "#FFFFFF";
         ctxServers.font = "14px Arial";
         ctxServers.textAlign = "center";
 
         ctxServers.fillText(
             v,
-            x + (barW - 80) / 2,
+            x + barW / 2,
             y - 8
         );
 
+        // Server icon
         const img = new Image();
 
         img.src = imgSrc;
 
         img.onload = () => {
-            const imgX = x + (barW - 80) / 2 - 12;
-            ctxServers.drawImage(img, imgX, 252, 24, 24);
+            const imgX = x + barW / 2 - 12;
+
+            ctxServers.drawImage(
+                img,
+                imgX,
+                252,
+                24,
+                24
+            );
         };
     });
 
     cServers.onmousemove = e => {
         const rect = cServers.getBoundingClientRect();
-        const idx = Math.floor((e.clientX - rect.left) / barW);
+
+        const mouseX = e.clientX - rect.left - padding;
+
+        const idx = Math.floor(
+            mouseX / (barW + gap)
+        );
+
         const e2 = entries[idx];
 
         if (!e2) return;
