@@ -1,3 +1,7 @@
+/* ========================================================
+   GRAPH RENDERING FOR STATS TAB (graphs.js)
+   ======================================================== */
+
 function getStatsData() {
     return window.statsData;
 }
@@ -69,42 +73,94 @@ function renderStats() {
     }
 
     /* ========================================================
-       CHART RENDERING MATRIX
+       DATASET PROPERTIES BAR GRAPH
        ======================================================== */
     const statsBars = document.getElementById("statsBars");
     if (!statsBars) return;
-    statsBars.innerHTML = "<canvas id='canvasStats' width='500' height='260'></canvas>";
+
+    statsBars.innerHTML = "<canvas id='canvasStats' width='500' height='290'></canvas>";
 
     const cStats = document.getElementById("canvasStats");
     const ctxStats = cStats.getContext("2d");
+
+    const metrics = [
+        {
+            label: "Root Profiles",
+            val: absoluteScammers,
+            color: "#e57373"
+        },
+        {
+            label: "System Alts",
+            val: totalLinkedAlts,
+            color: "#81c784"
+        },
+        {
+            label: "Discord Handles",
+            val: discordCount,
+            color: "#64b5f6"
+        }
+    ];
+
+    let maxMetric = 0;
+    metrics.forEach(m => {
+        if (m.val > maxMetric) maxMetric = m.val;
+    });
 
     ctxStats.fillStyle = "#ffffff";
     ctxStats.font = "14px Arial";
     ctxStats.fillText("Dataset Properties Matrix", 10, 25);
 
-    const metrics = [
-        { label: "Root Profiles", val: absoluteScammers, color: "#e57373" },
-        { label: "System Alts", val: totalLinkedAlts, color: "#81c784" },
-        { label: "Discord Handles", val: discordCount, color: "#64b5f6" }
-    ];
+    const statsBarW = cStats.width / metrics.length;
 
     metrics.forEach((m, i) => {
-        const y = 60 + i * 60;
-        ctxStats.fillStyle = "#333333";
-        ctxStats.fillRect(10, y, 480, 24);
+        const h = (m.val / (maxMetric || 1)) * 200;
+        const x = i * statsBarW + 40;
+        const y = 240 - h;
 
-        const fillW = Math.min(480, (m.val / (totalLinkedAlts || 10)) * 300 + 20);
+        // Bar
         ctxStats.fillStyle = m.color;
-        ctxStats.fillRect(10, y, fillW, 24);
+        ctxStats.fillRect(x, y, statsBarW - 80, h);
 
-        ctxStats.fillStyle = "#ffffff";
+        // Value text
+        ctxStats.fillStyle = "#FFFFFF";
+        ctxStats.font = "14px Arial";
+        ctxStats.textAlign = "center";
+        ctxStats.fillText(
+            m.val,
+            x + (statsBarW - 80) / 2,
+            y - 8
+        );
+
+        // Label
+        ctxStats.fillStyle = "#CCCCCC";
         ctxStats.font = "12px Arial";
-        ctxStats.fillText(`${m.label} (${m.val})`, 20, y + 16);
+
+        const labelX = x + (statsBarW - 80) / 2;
+        ctxStats.fillText(m.label, labelX, 270);
     });
 
-    // Server Specific Processing Data Bounds
+    cStats.onmousemove = e => {
+        const rect = cStats.getBoundingClientRect();
+        const idx = Math.floor((e.clientX - rect.left) / statsBarW);
+        const metric = metrics[idx];
+
+        if (!metric) return;
+
+        showTip(
+            `${metric.label}: ${metric.val}`,
+            e.clientX + 15,
+            e.clientY + 15
+        );
+    };
+
+    cStats.onmouseout = hideTip;
+
+    /* ========================================================
+       SERVER DISTRIBUTION GRAPH
+       ======================================================== */
     const serverBars = document.getElementById("serverBars");
     if (!serverBars) return;
+
     serverBars.innerHTML = "<canvas id='canvasServers' width='500' height='290'></canvas>";
 
     const cServers = document.getElementById("canvasServers");
@@ -112,15 +168,24 @@ function renderStats() {
 
     const counts = {};
     const names = {};
+
     Object.entries(data.serverTags).forEach(([uuid, info]) => {
         if (!info.img) return;
+
         counts[info.img] = (counts[info.img] || 0) + 1;
-        if (info.name) names[info.img] = info.name;
+
+        if (info.name) {
+            names[info.img] = info.name;
+        }
     });
 
     const entries = Object.entries(counts);
+
     let maxS = 0;
-    entries.forEach(([_, v]) => { if (v > maxS) maxS = v; });
+
+    entries.forEach(([_, v]) => {
+        if (v > maxS) maxS = v;
+    });
 
     ctxServers.fillStyle = "#ffffff";
     ctxServers.font = "14px Arial";
@@ -133,16 +198,23 @@ function renderStats() {
         const x = i * barW + 40;
         const y = 240 - h;
 
-        ctxServers.fillStyle = "#2196F3"; 
+        ctxServers.fillStyle = "#2196F3";
         ctxServers.fillRect(x, y, barW - 80, h);
 
         ctxServers.fillStyle = "#FFFFFF";
         ctxServers.font = "14px Arial";
         ctxServers.textAlign = "center";
-        ctxServers.fillText(v, x + (barW - 80) / 2, y - 8);
+
+        ctxServers.fillText(
+            v,
+            x + (barW - 80) / 2,
+            y - 8
+        );
 
         const img = new Image();
+
         img.src = imgSrc;
+
         img.onload = () => {
             const imgX = x + (barW - 80) / 2 - 12;
             ctxServers.drawImage(img, imgX, 252, 24, 24);
@@ -153,9 +225,14 @@ function renderStats() {
         const rect = cServers.getBoundingClientRect();
         const idx = Math.floor((e.clientX - rect.left) / barW);
         const e2 = entries[idx];
+
         if (!e2) return;
 
-        showTip(`${names[e2[0]] || e2[0]}: ${e2[1]} Scammers Recorded`, e.clientX + 15, e.clientY + 15);
+        showTip(
+            `${names[e2[0]] || e2[0]}: ${e2[1]} Scammers Recorded`,
+            e.clientX + 15,
+            e.clientY + 15
+        );
     };
 
     cServers.onmouseout = hideTip;
