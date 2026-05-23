@@ -47,30 +47,29 @@ function renderStats() {
     const textContainer = document.getElementById("statsText");
     if (textContainer) textContainer.innerHTML = "";
 
-    /* ========================================================
-       DATA PARSING ENGINE
-       ======================================================== */
-    let totalLinkedAlts = 0;
-    let maxAlts = 0;
-    let absoluteScammers = data.uuids.length;
+/* ========================================================
+   DATA PARSING ENGINE
+   ======================================================== */
+let totalLinkedAlts = 0;
+let absoluteScammers = data.uuids.length;
 
-    Object.values(data.altMap).forEach(arr => {
-        totalLinkedAlts += arr.length;
-        if (arr.length > maxAlts) maxAlts = arr.length;
-    });
+Object.values(data.altMap).forEach(arr => {
+    totalLinkedAlts += arr.length;
+});
 
-    let discordCount = 0;
-    Object.values(data.discordLinks).forEach(arr => discordCount += arr.length);
+let discordCount = 0;
+Object.values(data.discordLinks).forEach(arr => {
+    discordCount += arr.length;
+});
 
-    // Build metrics report paragraph strings
-    if (textContainer) {
-        textContainer.innerHTML = `
-            <p>• <strong>Total Verified Root Targets:</strong> ${absoluteScammers}</p>
-            <p>• <strong>Total Linked Alt Profiles:</strong> ${totalLinkedAlts}</p>
-            <p>• <strong>Max Linked Alts on Single Profile:</strong> ${maxAlts}</p>
-            <p>• <strong>Associated Discord Footprints:</strong> ${discordCount}</p>
-        `;
-    }
+// Build metrics report paragraph strings
+if (textContainer) {
+    textContainer.innerHTML = `
+        <p>• <strong>Mains:</strong> ${absoluteScammers}</p>
+        <p>• <strong>Alts:</strong> ${totalLinkedAlts}</p>
+        <p>• <strong>Discords:</strong> ${discordCount}</p>
+    `;
+}
 
     /* ========================================================
        DATASET PROPERTIES BAR GRAPH
@@ -85,17 +84,17 @@ function renderStats() {
 
     const metrics = [
         {
-            label: "Root Profiles",
+            label: "Mains",
             val: absoluteScammers,
             color: "#e57373"
         },
         {
-            label: "System Alts",
+            label: "Alts",
             val: totalLinkedAlts,
             color: "#81c784"
         },
         {
-            label: "Discord Handles",
+            label: "Discords",
             val: discordCount,
             color: "#64b5f6"
         }
@@ -108,7 +107,7 @@ function renderStats() {
 
     ctxStats.fillStyle = "#ffffff";
     ctxStats.font = "14px Arial";
-    ctxStats.fillText("Dataset Properties Matrix", 10, 25);
+    ctxStats.fillText("Account Totals", 10, 25);
 
     const statsBarW = cStats.width / metrics.length;
 
