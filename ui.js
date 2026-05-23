@@ -72,15 +72,17 @@ function renderPlayers() {
                     <summary>Username History (${usernames.length})</summary>
                     <div class="alt-entry">
                         ${usernames.map(entry => {
-                            // Crafty API uses changedAt; fall back to other common field names
-                            const raw = entry.changedAt ?? entry.changed_at ?? entry.timestamp ?? entry.time ?? null;
+                            // Crafty API returns changed_at as an ISO string e.g. "2025-04-09T01:28:57.689+02:00"
+                            // Fall back to other common field names just in case
+                            const raw = entry.changed_at ?? entry.changedAt ?? entry.timestamp ?? entry.time ?? null;
                             let dateStr = "";
                             if (raw) {
-                                // Handle both Unix seconds and milliseconds
-                                const ms = raw > 1e10 ? raw : raw * 1000;
-                                dateStr = new Date(ms).toLocaleDateString(undefined, {
-                                    year: "numeric", month: "short", day: "numeric"
-                                });
+                                const d = new Date(raw);
+                                if (!isNaN(d)) {
+                                    dateStr = d.toLocaleDateString(undefined, {
+                                        year: "numeric", month: "short", day: "numeric"
+                                    });
+                                }
                             }
                             return `
                                 <div class="alt-row" style="justify-content: space-between;">
