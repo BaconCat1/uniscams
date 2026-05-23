@@ -53,11 +53,18 @@ function renderStats() {
 let totalLinkedAlts = 0;
 let absoluteScammers = data.uuids.length;
 
+// System detected alts
 Object.values(data.altMap).forEach(arr => {
     totalLinkedAlts += arr.length;
 });
 
+// Manual alts from data.json
+Object.values(data.manualAlts || {}).forEach(arr => {
+    totalLinkedAlts += arr.length;
+});
+
 let discordCount = 0;
+
 Object.values(data.discordLinks).forEach(arr => {
     discordCount += arr.length;
 });
