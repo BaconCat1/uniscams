@@ -240,3 +240,10 @@ details.section summary {
     object-fit: cover;
     border: 1px solid rgba(255,255,255,0.12);
 }
+#tab-stats canvas {
+    margin-top: 10px;
+    background: #111;
+    border-radius: 8px;
+    padding: 10px;
+    max-width: 100%;
+}
