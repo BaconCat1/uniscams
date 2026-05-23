@@ -1,5 +1,3 @@
-console.log("graphs.js loaded");
-
 function getStatsData() {
     return window.statsData;
 }
