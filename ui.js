@@ -88,7 +88,7 @@ function renderPlayers() {
         if (alts.length) {
             knownAltHTML = `
                 <details class="section">
-                    <summary>Linked Historical Profiles (${alts.length})</summary>
+                    <summary>Alts (${alts.length})</summary>
                     <div class="alt-entry">
                         ${alts.map(altUuid => {
                             const altProfile = players.get(altUuid);
@@ -171,10 +171,10 @@ function renderPlayers() {
                     <div class="uuid">${main.uuid}</div>
                 </div>
             </div>
-            ${usernameHistoryHTML}
             ${knownAltHTML}
             ${manualAltHTML}
             ${discordHTML}
+            ${usernameHistoryHTML}
         `;
         container.appendChild(card);
     }
