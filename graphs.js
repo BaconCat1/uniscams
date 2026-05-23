@@ -187,6 +187,127 @@ function renderStats() {
     cStats.onmouseout = hideTip;
 
     /* ========================================================
+       USERNAME CHANGE GRAPH
+       ======================================================== */
+
+    const usernameBars = document.getElementById("usernameBars");
+
+    if (usernameBars) {
+        usernameBars.innerHTML =
+            "<canvas id='canvasUsernames' width='500' height='290'></canvas>";
+
+        const cUsernames = document.getElementById("canvasUsernames");
+        const ctxUsernames = cUsernames.getContext("2d");
+
+        const usernameMetrics = {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3+": 0
+        };
+
+        // playerMap is a Map(), not a normal object
+        playerMap.forEach(player => {
+
+            // CHANGE THIS FIELD IF NECESSARY
+            const history =
+                player.nameHistory ||
+                player.usernameHistory ||
+                player.names ||
+                [];
+
+            // History arrays usually include current username
+            const changes = Math.max(0, history.length - 1);
+
+            if (changes >= 3) {
+                usernameMetrics["3+"]++;
+            } else {
+                usernameMetrics[String(changes)]++;
+            }
+        });
+
+        const usernameEntries = Object.entries(usernameMetrics).map(
+            ([label, val]) => ({
+                label,
+                val
+            })
+        );
+
+        let maxUsernameMetric = 0;
+
+        usernameEntries.forEach(entry => {
+            if (entry.val > maxUsernameMetric) {
+                maxUsernameMetric = entry.val;
+            }
+        });
+
+        const usernameBarW =
+            cUsernames.width / usernameEntries.length;
+
+        usernameEntries.forEach((m, i) => {
+
+            const h =
+                (m.val / (maxUsernameMetric || 1)) * 170;
+
+            const x = i * usernameBarW + 40;
+            const y = 240 - h;
+
+            // Bar
+            ctxUsernames.fillStyle = "#FF9800";
+
+            ctxUsernames.fillRect(
+                x,
+                y,
+                usernameBarW - 80,
+                h
+            );
+
+            // Value text
+            ctxUsernames.fillStyle = "#FFFFFF";
+            ctxUsernames.font = "14px Arial";
+            ctxUsernames.textAlign = "center";
+
+            ctxUsernames.fillText(
+                m.val,
+                x + (usernameBarW - 80) / 2,
+                y - 8
+            );
+
+            // Label text
+            ctxUsernames.fillStyle = "#CCCCCC";
+            ctxUsernames.font = "12px Arial";
+
+            ctxUsernames.fillText(
+                `${m.label} changes`,
+                x + (usernameBarW - 80) / 2,
+                270
+            );
+        });
+
+        cUsernames.onmousemove = e => {
+
+            const rect =
+                cUsernames.getBoundingClientRect();
+
+            const idx = Math.floor(
+                (e.clientX - rect.left) / usernameBarW
+            );
+
+            const metric = usernameEntries[idx];
+
+            if (!metric) return;
+
+            showTip(
+                `${metric.label} changes: ${metric.val}`,
+                e.clientX + 15,
+                e.clientY + 15
+            );
+        };
+
+        cUsernames.onmouseout = hideTip;
+    }
+
+    /* ========================================================
        SERVER DISTRIBUTION GRAPH
        ======================================================== */
 
