@@ -38,6 +38,7 @@ function hideTip() {
 
 function renderStats() {
     const data = getStatsData();
+
     if (!data) return;
 
     // Pull the shared data exposed from app.js
@@ -120,21 +121,22 @@ function renderStats() {
         }
     });
 
-    ctxStats.fillStyle = "#ffffff";
-    ctxStats.font = "14px Arial";
-    ctxStats.fillText("Account Totals", 10, 25);
-
     const statsBarW = cStats.width / metrics.length;
 
     metrics.forEach((m, i) => {
-        const h = (m.val / (maxMetric || 1)) * 200;
+        const h = (m.val / (maxMetric || 1)) * 170;
 
         const x = i * statsBarW + 40;
         const y = 240 - h;
 
         // Bar
         ctxStats.fillStyle = m.color;
-        ctxStats.fillRect(x, y, statsBarW - 80, h);
+        ctxStats.fillRect(
+            x,
+            y,
+            statsBarW - 80,
+            h
+        );
 
         // Value text
         ctxStats.fillStyle = "#FFFFFF";
@@ -216,15 +218,6 @@ function renderStats() {
         }
     });
 
-    ctxServers.fillStyle = "#ffffff";
-    ctxServers.font = "14px Arial";
-
-    ctxServers.fillText(
-        "Distribution Across Server Landscapes",
-        10,
-        25
-    );
-
     const padding = 40;
     const gap = 20;
 
@@ -237,14 +230,20 @@ function renderStats() {
     );
 
     entries.forEach(([imgSrc, v], i) => {
-        const h = (v / (maxS || 1)) * 200;
+        const h = (v / (maxS || 1)) * 170;
 
         const x = padding + i * (barW + gap);
-        const y = 240 - h;
+        const y = 220 - h;
 
         // Bar
         ctxServers.fillStyle = "#2196F3";
-        ctxServers.fillRect(x, y, barW, h);
+
+        ctxServers.fillRect(
+            x,
+            y,
+            barW,
+            h
+        );
 
         // Value text
         ctxServers.fillStyle = "#FFFFFF";
