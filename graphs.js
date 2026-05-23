@@ -293,7 +293,7 @@ function renderStats() {
         if (!e2) return;
 
         showTip(
-            `${names[e2[0]] || e2[0]}: ${e2[1]} Scammers Recorded`,
+            `${e2[1]}`,
             e.clientX + 15,
             e.clientY + 15
         );
