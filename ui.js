@@ -229,69 +229,104 @@ function renderUnlinkedPlayers() {
         const card = document.createElement("div");
         card.className = "player unlinked-profile";
 
-        const discordId = entry.discordId || "Unknown";
+        const displayName = entry.name || "Unknown Player";
+        const discordId = entry.discordId;
         const source = entry.source || "Unknown";
         const note = entry.note || "";
 
-        let discordHTML = `
-            <details class="section">
-                <summary>Discord Link</summary>
-                <div class="alt-entry">
-                    <div class="alt-row">
-                        <div>Discord ID</div>
-                        <div class="uuid">${discordId}</div>
+        // Match normal card Discord rendering
+        let discordHTML = "";
+
+        if (discordId) {
+            const dUser = getDiscordUser(discordId);
+            const avatar = dUser ? getDiscordAvatar(dUser) : "";
+            const globalName = dUser
+                ? (dUser.global_name || dUser.username || discordId)
+                : discordId;
+
+            const username = dUser?.username || "";
+
+            discordHTML = `
+                <details class="section">
+                    <summary>Discord Account</summary>
+
+                    <div class="alt-entry">
+                        <div class="discord-card">
+                            ${
+                                avatar
+                                    ? `<img class="discord-avatar" src="${avatar}" width="40" height="40">`
+                                    : `<div class="discord-avatar" style="width:40px;height:40px;background:#1e1f22;"></div>`
+                            }
+
+                            <div class="discord-info">
+                                <a href="https://discord.com/users/${discordId}" target="_blank">
+                                    ${globalName}${username && username !== globalName ? ` (@${username})` : ""}
+                                </a>
+
+                                <span class="discord-id">${discordId}</span>
+                            </div>
+                        </div>
                     </div>
+                </details>
+            `;
+        }
+
+        // Separate metadata dropdown
+        let metadataHTML = `
+            <details class="section">
+                <summary>Unlinked Metadata</summary>
+
+                <div class="alt-entry">
 
                     <div class="alt-row">
-                        <div>Source</div>
-                        <div class="uuid">${source}</div>
+                        <div>
+                            <div>Source</div>
+                            <div class="uuid">${source}</div>
+                        </div>
                     </div>
 
                     ${
                         note
                             ? `
                         <div class="alt-row">
-                            <div>Note</div>
-                            <div class="uuid">${note}</div>
+                            <div>
+                                <div>Note</div>
+                                <div class="uuid">${note}</div>
+                            </div>
                         </div>
                     `
                             : ""
                     }
+
                 </div>
             </details>
         `;
 
         card.innerHTML = `
             <div class="player-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div
-                        style="
-                            width:48px;
-                            height:48px;
-                            border-radius:6px;
-                            background:#222;
-                            display:flex;
-                            align-items:center;
-                            justify-content:center;
-                            font-size:22px;
-                        "
-                    >
-                        ?
-                    </div>
+                <div
+                    style="
+                        width:64px;
+                        height:64px;
+                        border-radius:4px;
+                        background:#1b1b1b;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-size:28px;
+                    "
+                >
+                    ?
+                </div>
 
-                    <div style="flex:1;">
-                        <div class="username">
-                            ${entry.name || "Unknown Player"}
-                        </div>
-
-                        <div class="uuid">
-                            No confirmed main account
-                        </div>
-                    </div>
+                <div style="flex:1;">
+                    <div class="username">${displayName}</div>
+                    <div class="uuid">No confirmed Minecraft main account</div>
                 </div>
             </div>
 
             ${discordHTML}
+            ${metadataHTML}
         `;
 
         container.appendChild(card);
