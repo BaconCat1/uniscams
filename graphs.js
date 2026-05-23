@@ -45,10 +45,10 @@ function renderStats() {
 
     if (!data) return;
 
-    // Pull the shared data exposed from app.js
+    // Shared data from app.js
     const playerMap = window.players || new Map();
 
-    // Target the text container instead of destroying canvas mounting wrappers
+    // Text container
     const textContainer = document.getElementById("statsText");
 
     if (textContainer) {
@@ -67,7 +67,7 @@ function renderStats() {
         totalLinkedAlts += arr.length;
     });
 
-    // Manual alts from data.json
+    // Manual alts
     Object.values(data.manualAlts || {}).forEach(arr => {
         totalLinkedAlts += arr.length;
     });
@@ -78,7 +78,7 @@ function renderStats() {
         discordCount += arr.length;
     });
 
-    // Build metrics report paragraph strings
+    // Stats text
     if (textContainer) {
         textContainer.innerHTML = `
             <p>• <strong>Mains:</strong> ${absoluteScammers}</p>
@@ -88,7 +88,7 @@ function renderStats() {
     }
 
     /* ========================================================
-       DATASET PROPERTIES BAR GRAPH
+       ACCOUNT STATS BAR GRAPH
        ======================================================== */
 
     const statsBars = document.getElementById("statsBars");
@@ -127,7 +127,9 @@ function renderStats() {
     const statsBarW = cStats.width / metrics.length;
 
     metrics.forEach((m, i) => {
-        const h = (m.val / (maxMetric || 1)) * 170;
+
+        const h =
+            (m.val / (maxMetric || 1)) * 170;
 
         const x = i * statsBarW + 40;
         const y = 240 - h;
@@ -157,17 +159,17 @@ function renderStats() {
         ctxStats.fillStyle = "#CCCCCC";
         ctxStats.font = "12px Arial";
 
-        const labelX = x + (statsBarW - 80) / 2;
-
         ctxStats.fillText(
             m.label,
-            labelX,
+            x + (statsBarW - 80) / 2,
             270
         );
     });
 
     cStats.onmousemove = e => {
-        const rect = cStats.getBoundingClientRect();
+
+        const rect =
+            cStats.getBoundingClientRect();
 
         const idx = Math.floor(
             (e.clientX - rect.left) / statsBarW
@@ -193,11 +195,15 @@ function renderStats() {
     const usernameBars = document.getElementById("usernameBars");
 
     if (usernameBars) {
+
         usernameBars.innerHTML =
             "<canvas id='canvasUsernames' width='500' height='290'></canvas>";
 
-        const cUsernames = document.getElementById("canvasUsernames");
-        const ctxUsernames = cUsernames.getContext("2d");
+        const cUsernames =
+            document.getElementById("canvasUsernames");
+
+        const ctxUsernames =
+            cUsernames.getContext("2d");
 
         const usernameMetrics = {
             "0": 0,
@@ -206,18 +212,16 @@ function renderStats() {
             "3+": 0
         };
 
-        // playerMap is a Map(), not a normal object
+        // Parse username histories
         playerMap.forEach(player => {
 
-            // CHANGE THIS FIELD IF NECESSARY
+            // Username history array
             const history =
-                player.nameHistory ||
-                player.usernameHistory ||
-                player.names ||
-                [];
+                player.usernames || [];
 
-            // History arrays usually include current username
-            const changes = Math.max(0, history.length - 1);
+            // Total changes
+            const changes =
+                history.length;
 
             if (changes >= 3) {
                 usernameMetrics["3+"]++;
@@ -226,31 +230,37 @@ function renderStats() {
             }
         });
 
-        const usernameEntries = Object.entries(usernameMetrics).map(
-            ([label, val]) => ({
-                label,
-                val
-            })
-        );
+        const usernameEntries =
+            Object.entries(usernameMetrics).map(
+                ([label, val]) => ({
+                    label,
+                    val
+                })
+            );
 
         let maxUsernameMetric = 0;
 
         usernameEntries.forEach(entry => {
+
             if (entry.val > maxUsernameMetric) {
                 maxUsernameMetric = entry.val;
             }
         });
 
         const usernameBarW =
-            cUsernames.width / usernameEntries.length;
+            cUsernames.width /
+            usernameEntries.length;
 
         usernameEntries.forEach((m, i) => {
 
             const h =
                 (m.val / (maxUsernameMetric || 1)) * 170;
 
-            const x = i * usernameBarW + 40;
-            const y = 240 - h;
+            const x =
+                i * usernameBarW + 40;
+
+            const y =
+                240 - h;
 
             // Bar
             ctxUsernames.fillStyle = "#FF9800";
@@ -290,10 +300,12 @@ function renderStats() {
                 cUsernames.getBoundingClientRect();
 
             const idx = Math.floor(
-                (e.clientX - rect.left) / usernameBarW
+                (e.clientX - rect.left) /
+                usernameBarW
             );
 
-            const metric = usernameEntries[idx];
+            const metric =
+                usernameEntries[idx];
 
             if (!metric) return;
 
@@ -325,9 +337,11 @@ function renderStats() {
     const names = {};
 
     Object.entries(data.serverTags).forEach(([uuid, info]) => {
+
         if (!info.img) return;
 
-        counts[info.img] = (counts[info.img] || 0) + 1;
+        counts[info.img] =
+            (counts[info.img] || 0) + 1;
 
         if (info.name) {
             names[info.img] = info.name;
@@ -347,19 +361,27 @@ function renderStats() {
     const padding = 40;
     const gap = 20;
 
-    const usableWidth = cServers.width - padding * 2;
+    const usableWidth =
+        cServers.width - padding * 2;
 
     const barW = Math.min(
         120,
-        (usableWidth - (entries.length - 1) * gap) /
-        (entries.length || 1)
+        (
+            usableWidth -
+            (entries.length - 1) * gap
+        ) / (entries.length || 1)
     );
 
     entries.forEach(([imgSrc, v], i) => {
-        const h = (v / (maxS || 1)) * 170;
 
-        const x = padding + i * (barW + gap);
-        const y = 240 - h;
+        const h =
+            (v / (maxS || 1)) * 170;
+
+        const x =
+            padding + i * (barW + gap);
+
+        const y =
+            240 - h;
 
         // Bar
         ctxServers.fillStyle = "#2196F3";
@@ -388,7 +410,9 @@ function renderStats() {
         img.src = imgSrc;
 
         img.onload = () => {
-            const imgX = x + barW / 2 - 12;
+
+            const imgX =
+                x + barW / 2 - 12;
 
             ctxServers.drawImage(
                 img,
@@ -401,9 +425,12 @@ function renderStats() {
     });
 
     cServers.onmousemove = e => {
-        const rect = cServers.getBoundingClientRect();
 
-        const mouseX = e.clientX - rect.left - padding;
+        const rect =
+            cServers.getBoundingClientRect();
+
+        const mouseX =
+            e.clientX - rect.left - padding;
 
         const idx = Math.floor(
             mouseX / (barW + gap)
