@@ -1,0 +1,5 @@
+# EXTRA SOURCES
+* "UneasyVanilla Coordinate Leak" (not linked intentionally, visit at your own peril)
+	* Used for 99d8b08b-f81a-4884-b417-180529b212ce alts
+* 331efd8f-ad18-4927-9e97-e484cb78a24c discord: https://discord.com/channels/1296227288869896274/1302102318984073317/1507219364942712844
+* 66d52673-ceb8-4e27-a283-5c5b155ca24b Evidence they scammed me personally, not yet listed in the formal RV scammer list: https://discord.com/channels/1427088370676400241/1428539816764506294/1491138739391434873

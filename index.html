@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Semi-Anarchy Scammers</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1>JollyCurve_'s Unified Semi-Anarchy Scammer List</h1>
+
+<div class="tabs">
+    <div class="tab-btn active" onclick="switchTab('list')">List</div>
+    <div class="tab-btn" onclick="switchTab('faq')">FAQ</div>
+    <div class="tab-btn" onclick="switchTab('stats')">Stats</div>
+
+    <button id="clear-cache-btn" class="clear-btn">
+        Clear Cache & Reload
+    </button>
+</div>
+
+<div id="tab-list" class="tab-content active">
+    <div class="search-container">
+        <input type="text" id="player-search" placeholder="Search names, alts, uuids, or discords..." autocomplete="off">
+    </div>
+    <div id="players"></div>
+</div>
+
+<div id="tab-faq" class="tab-content">
+
+    <details class="section">
+        <summary><strong>What is this list? Why did you make it?</strong></summary>
+        <div style="margin-top:10px;">
+            This is a unified list of scammers listed on semi-anarchy servers. Because the original lists are static, and users change their usernames over time, it can be unclear if a user is a scammer or not based on the original lists alone. This list takes the scammers collected in the original lists, and stores them as UUIDs first in order to show who is a scammer right now in an automatic and up to date fashion.
+			<br>
+			Additionally, the goal was to unifiy the various scammer lists, as one goal of marking scammers is to be punitive as well as a safety measure. Avoiding a scammer from another server is often preferred.
+			<br>
+			I made this list to show their current <b>LIVE</b> username, as well as the username history, as the static lists maintained on trading Discords suffer from username changes and deliberate obfuscation by scammers. In short, if you're looking to trade with someone, and the name they have <i>right now</i> doesn't show up in the list or username history, you can feel confident they're not a known scammer.
+        </div>
+    </details>
+
+    <details class="section">
+        <summary><strong>Where are the original scammers lists?</strong></summary>
+        <div style="margin-top:10px;">
+            Each server has it's own separately run trading Discord with it's own unique list of scammers. I manually went through and added the data from those servers to this list, sometimes using chat bridge history and/or the ForestBot database to determine what UUID the scammer has. You can check my work by joining the relevant Discord linked below:
+			<br>
+				<ul>
+					<li><a href="https://Discord.gg/m5fGuqHyeb" target="_blank"><u>Refined Vanilla</u></a></li>
+					<li><a href="https://Discord.gg/g5YJ2f69sZ" target="_blank"><u>Simply Vanilla</u></a></li>
+					<li><a href="https://Discord.gg/XrvxpVv9KU" target="_blank"><u>Uneasy Vanilla</u></a></li>
+					<li><a href="https://Discord.gg/KrkxKmG24" target="_blank"><u>Purity Vanilla</u></a></li>
+					<li><a href="https://Discord.gg/SeawAYDTGy" target="_blank"><u>Anarchy Network</u></a></li>
+				</ul>
+			<br>
+			Once you've joined, you can click the server icon next to a username to be taken directly to the scammer list of that server's trading Discord.
+        </div>
+    </details>
+
+    <details class="section">
+        <summary><strong>How do you know someone actually scammed though?</strong></summary>
+        <div style="margin-top:10px;">
+            This list isn't meant to adjudicate scammer status. The goal is to record scammer's UUIDs, which never change, and present their current username in an easily text searchable way, as well as their username history. If you believe you don't deserve to be marked as a scammer, you'll have to resolve that with the relevant trading Discord mods as well as the person you scammed.
+        </div>
+    </details>
+	
+	<details class="section">
+        <summary><strong>How can you be certain of a scammer's UUID?</strong></summary>
+        <div style="margin-top:10px;">
+            Sites like <a href="https://namemc.com/ " target="_blank"><u>NameMC</u></a> allow you to see a username's history across any UUIDs it's been used with. Naturally, if a username listed on a scammer list only has one entry, you can be confident that UUID is the scammer. Things get more difficult when multiple UUIDs have used the same username. If the list is a decent record, you can use the time the scammer was listed to narrow when the username was in use, and that often is enough to determine the correct UUID. I also leveraged the data in the ForestBot database since UUIDs are recorded for things like deaths and advancements, which could give an objective link between a username and UUID, as well as a timestamp.
+			<br>
+			Unfortunately, several lists were not as granular as the Simply Vanilla list, Purity's in particular was quite annoying. I think there's some history behind that, some controversy about what trading Discord was "official", as well as the chat bridge not being as historical as Simply's. I did my best, but where things were unclear I had no choice but to not list them. Better a scammer goes undetected, for now, than an innocent person be marked in my opinion.
+        </div>
+    </details>
+	
+	<details class="section">
+        <summary><strong>You say you're confident about the UUIDs, and yet you list some as just usernames without UUIDs. Why is that?</strong></summary>
+        <div style="margin-top:10px;">
+            That's true. The Purity scammer list in particular was not helpful when it came to linking the scammer's username with a UUID. Without additional context and multiple UUIDs having used the username during the server's time online, I couldn't narrow it down. The next best thing was to list the known names since that much is concrete.
+        </div>
+    </details>
+	
+	<details class="section">
+        <summary><strong>NameMC allows people to hide username history, how did you find their UUID anyway?</strong></summary>
+        <div style="margin-top:10px;">
+            NameMC isn't the only site with username history. I'd say it's probably the most comprehensive and easiest to use, but being the most popular does lead to users of all stripes trying to hide their username history. Between other username lookup sites, the chat bridges, and the ForestBot database, you usually can't hide from me, unless the original list sucks in the way I described previously.
+        </div>
+    </details>
+	
+	<details class="section">
+        <summary><strong>Why is the username history incomplete for some users?</strong></summary>
+        <div style="margin-top:10px;">
+            The API that pulls username data doesn't have a perfect record of usernames. Mojang cut off access to the official API and not all username sites have the same data. One thing you can count on is their current username being the one displayed though.
+        </div>
+    </details>
+	
+	<details class="section">
+        <summary><strong>Is Discord account information being pulled live like Minecraft UUIDs?</strong></summary>
+        <div style="margin-top:10px;">
+            <b>No</b>. I couldn't find a clean way to pull live Discord account data without a bot sitting in the middle, and the goal was for this page to be static so that was a no go. The compromise is the bot reads the Discord account info based on the <code>data.json</code> file the page uses, and generates a <code>discord.json</code> file with the Discord account information. While it isn't pulling it live, Discord User IDs are static in the same way Minecraft UUIDs are, which means opening the account from this page in discord by clicking on it will get you the correct account, even if the scammer has changed their Discord username/avatar.
+        </div>
+    </details>
+	
+	<details class="section">
+        <summary><strong>Did you use any other sources beyond the scammer lists?</strong></summary>
+        <div style="margin-top:10px;">
+            <b>Yes</b>. <a href="/EXTRASOURCES.MD" target="_blank"><u>You can view those here</u></a>. Notably, the alts listed in the "UneasyVanilla Coordinate Leak" were used where applicable, as I've found the data listed there valid. However I would caution against loading the site to avoid potential IP Loggers etc.
+        </div>
+    </details>
+	
+	<details class="section">
+		<summary><strong>Why does the page take so long to load? Why do some users fail to load?</strong></summary>
+		<div style="margin-top:10px;">
+			The initial load pulls a lot of data from the API I'm using to resolve usernames and username history. Sometimes the API refuses to send data to you because so much is being requested at once. If retries fail, you're simply prompted to attempt to reload them and that's usually good enough. After that, most of the data is cached.
+		</div>
+	</details>
+	<details class="section">
+		<summary><strong>Who are you? Why are you interested in these scammers?</strong></summary>
+		<div style="margin-top:10px;">
+			Within the Minecraft Semi-Anarchy space, I go by <a href="https://namemc.com/profile/a46a779e-0ff2-443d-99b7-130c288c784c" target="_blank"><u>JollyCurve_</u></a> in game. <a href="https://discord.com/users/1310388036051144767" target="_blank"><u>You can find me on discord here</u></a>.
+			<br>
+			My irl buddy and I <a href="https://discord.gg/ajBEzpvWPh" target="_blank"><u>run a shop together for fun</u></a> and got most invested in the "run a shop, make ing" game loop starting on Simply Vanilla after we got established and familiar with the quirks of semi-anarchy. I first joined SV in October 2024 and have been fairly fixated on placing blocks ever since. The idea of a unified scammer list has been in my head for quite awhile, and the result of that thought experiment is this page.
+		</div>
+	</details>
+
+</div>
+
+<div id="tab-stats" class="tab-content">
+    </div>
+
+<div id="loading-screen">
+    <div class="loader-box">
+        <div class="spinner"></div>
+        <div id="loading-text">Loading players...</div>
+    </div>
+</div>
+
+<script src="api.js"></script> 
+<script src="ui.js"></script>
+<script src="graphs.js"></script>
+<script src="app.js"></script>
+
+<script>
+function switchTab(tab) {
+    const tabs = {
+        list: document.getElementById("tab-list"),
+        faq: document.getElementById("tab-faq"),
+        stats: document.getElementById("tab-stats")
+    };
+
+    const buttons = document.querySelectorAll(".tab-btn");
+
+    buttons.forEach(b => b.classList.remove("active"));
+    Object.values(tabs).forEach(t => t.classList.remove("active"));
+
+    if (tab === "list") {
+        tabs.list.classList.add("active");
+        buttons[0].classList.add("active");
+    }
+    if (tab === "faq") {
+        tabs.faq.classList.add("active");
+        buttons[1].classList.add("active");
+    }
+    if (tab === "stats") {
+        tabs.stats.classList.add("active");
+        buttons[2].classList.add("active");
+    }
+}
+</script>
+
+</body>
+</html>

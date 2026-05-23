@@ -1,0 +1,229 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
+    margin: 0;
+}
+
+/* =====================
+   TABS
+===================== */
+.tabs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px;
+    padding: 10px;
+    background: #1a1a1a;
+    border-radius: 10px;
+}
+
+.clear-btn {
+    margin-left: auto;
+}
+
+.tab-btn,
+.clear-btn {
+    padding: 8px 12px;
+    background: #222;
+    cursor: pointer;
+    border-radius: 6px;
+    color: white;
+    border: none;
+}
+
+.tab-btn.active {
+    background: #444;
+}
+
+.tab-content {
+    display: none;
+    padding: 10px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* =====================
+   PLAYER CARDS
+===================== */
+.player {
+    background: #1a1a1a;
+    padding: 12px;
+    margin: 10px;
+    border-radius: 10px;
+}
+
+.player-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #333;
+}
+
+.alt-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.uuid {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.username {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* =====================
+   LOADING SCREEN (RESTORED)
+===================== */
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,10,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 99999;
+    transition: opacity 0.4s ease;
+}
+
+.loader-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+/* SPINNER RESTORED */
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* =====================
+   DISCORD ACCORDION & CARDS (DISCORD UI THEME)
+===================== */
+/* Styles the details dropdown box for Discord */
+details.section {
+    background: #111214; /* Discord container background */
+    border: 1px solid #2b2d31;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+details.section summary {
+    font-weight: bold;
+    cursor: pointer;
+    color: #dbdee1;
+    user-select: none;
+}
+
+/* Container for all Discord profiles inside the dropdown */
+.alt-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* Individual Discord Profile Card */
+.discord-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #2b2d31; /* Discord mid-ground chat color */
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid #1e1f22;
+}
+
+/* Circular Discord Avatar */
+.discord-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #1e1f22;
+}
+
+/* Text layout container */
+.discord-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Discord Name Link */
+.discord-info a {
+    text-decoration: none;
+    color: #f2f3f5;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.discord-info a:hover {
+    text-decoration: underline;
+}
+
+/* Discord Snowflake ID Styling */
+.discord-id {
+    font-family: monospace;
+    font-size: 11px;
+    color: #949ba4; /* Discord muted text color */
+}
+/* =====================
+   FLOATING SEARCH BAR
+===================== */
+.search-container {
+    position: fixed;
+    top: 17px; /* Aligns perfectly center with your tab buttons */
+    right: 25px;
+    z-index: 10000;
+    width: 300px;
+}
+
+#player-search {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(26, 26, 26, 0.95);
+    color: white;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#player-search:focus {
+    border-color: #4CAF50;
+}
+
+/* Add a bit of top margin to the players container so the first card isn't covered */
+#players {
+    margin-top: 55px;
+}
+/* Unlinked Custom Archive Card Warning Variants */
+.player.unlinked-profile {
+    border-left: 4px solid #ff4444;
+    background: linear-gradient(145deg, #1e1515, #141414);
+}
