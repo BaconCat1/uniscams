@@ -62,6 +62,25 @@ function renderPlayers() {
         card.className = "player";
         const head = `https://mc-heads.net/head/${mainUuid}.png`;
 
+        // --- Username History ---
+        const usernames = main.usernames || [];
+        let usernameHistoryHTML = "";
+
+        if (usernames.length) {
+            usernameHistoryHTML = `
+                <details class="section">
+                    <summary>Username History (${usernames.length})</summary>
+                    <div class="alt-entry">
+                        ${usernames.map(entry => `
+                            <div class="alt-row">
+                                <div>${entry.username}</div>
+                            </div>
+                        `).join("")}
+                    </div>
+                </details>
+            `;
+        }
+
         // --- Linked Alts (from altMap) ---
         const alts = altMap[mainUuid] || [];
         let knownAltHTML = "";
@@ -152,6 +171,7 @@ function renderPlayers() {
                     <div class="uuid">${main.uuid}</div>
                 </div>
             </div>
+            ${usernameHistoryHTML}
             ${knownAltHTML}
             ${manualAltHTML}
             ${discordHTML}
