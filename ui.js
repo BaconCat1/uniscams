@@ -73,7 +73,7 @@ function renderPlayers() {
                     <div class="alt-entry">
                         ${alts.map(altUuid => {
                             const altProfile = players.get(altUuid);
-                            const altHead = `https://crafatar.com/avatars/${altUuid}?size=32&default=MHF_Steve`;
+                            const altHead = `https://mc-heads.net/head/${altUuid}.png`;
 
                             if (!altProfile) {
                                 return `<div class="alt-row"><span class="uuid">Loading: ${altUuid}</span></div>`;
