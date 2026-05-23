@@ -219,9 +219,81 @@ function renderPlayers() {
 
 /* RENDER UNLINKED/AMBIGUOUS SYSTEM HISTORICAL CARDS */
 function renderUnlinkedPlayers() {
-    initUI(); // Ensure elements are bound
+    initUI();
+
     const unlinkedDataArray = window.unlinked || [];
+
     if (!container || !unlinkedDataArray.length) return;
 
-    // ... (rest of your renderUnlinkedPlayers logic)
+    for (const entry of unlinkedDataArray) {
+        const card = document.createElement("div");
+        card.className = "player unlinked-profile";
+
+        const discordId = entry.discordId || "Unknown";
+        const source = entry.source || "Unknown";
+        const note = entry.note || "";
+
+        let discordHTML = `
+            <details class="section">
+                <summary>Discord Link</summary>
+                <div class="alt-entry">
+                    <div class="alt-row">
+                        <div>Discord ID</div>
+                        <div class="uuid">${discordId}</div>
+                    </div>
+
+                    <div class="alt-row">
+                        <div>Source</div>
+                        <div class="uuid">${source}</div>
+                    </div>
+
+                    ${
+                        note
+                            ? `
+                        <div class="alt-row">
+                            <div>Note</div>
+                            <div class="uuid">${note}</div>
+                        </div>
+                    `
+                            : ""
+                    }
+                </div>
+            </details>
+        `;
+
+        card.innerHTML = `
+            <div class="player-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div
+                        style="
+                            width:48px;
+                            height:48px;
+                            border-radius:6px;
+                            background:#222;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            font-size:22px;
+                        "
+                    >
+                        ?
+                    </div>
+
+                    <div style="flex:1;">
+                        <div class="username">
+                            ${entry.name || "Unknown Player"}
+                        </div>
+
+                        <div class="uuid">
+                            No confirmed main account
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            ${discordHTML}
+        `;
+
+        container.appendChild(card);
+    }
 }
