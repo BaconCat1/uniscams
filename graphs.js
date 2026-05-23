@@ -208,25 +208,44 @@ function renderStats() {
         const usernameMetrics = {
             "0": 0,
             "1": 0,
-            "2": 0,
-            "3+": 0
+            "2-5": 0,
+            "6-10": 0,
+            "11-20": 0,
+            "21-30": 0
         };
 
         // Parse username histories
         playerMap.forEach(player => {
 
-            // Username history array
             const history =
                 player.usernames || [];
 
-            // Total changes
-            const changes =
-                history.length;
+			const changes =
+				Math.max(0, history.length - 1);
 
-            if (changes >= 3) {
-                usernameMetrics["3+"]++;
-            } else {
-                usernameMetrics[String(changes)]++;
+            if (changes === 0) {
+
+                usernameMetrics["0"]++;
+
+            } else if (changes === 1) {
+
+                usernameMetrics["1"]++;
+
+            } else if (changes >= 2 && changes <= 5) {
+
+                usernameMetrics["2-5"]++;
+
+            } else if (changes >= 6 && changes <= 10) {
+
+                usernameMetrics["6-10"]++;
+
+            } else if (changes >= 11 && changes <= 20) {
+
+                usernameMetrics["11-20"]++;
+
+            } else if (changes >= 21) {
+
+                usernameMetrics["21-30"]++;
             }
         });
 
@@ -257,7 +276,7 @@ function renderStats() {
                 (m.val / (maxUsernameMetric || 1)) * 170;
 
             const x =
-                i * usernameBarW + 40;
+                i * usernameBarW + 20;
 
             const y =
                 240 - h;
@@ -268,7 +287,7 @@ function renderStats() {
             ctxUsernames.fillRect(
                 x,
                 y,
-                usernameBarW - 80,
+                usernameBarW - 40,
                 h
             );
 
@@ -279,7 +298,7 @@ function renderStats() {
 
             ctxUsernames.fillText(
                 m.val,
-                x + (usernameBarW - 80) / 2,
+                x + (usernameBarW - 40) / 2,
                 y - 8
             );
 
@@ -288,8 +307,8 @@ function renderStats() {
             ctxUsernames.font = "12px Arial";
 
             ctxUsernames.fillText(
-                `${m.label} changes`,
-                x + (usernameBarW - 80) / 2,
+                m.label,
+                x + (usernameBarW - 40) / 2,
                 270
             );
         });
@@ -310,7 +329,7 @@ function renderStats() {
             if (!metric) return;
 
             showTip(
-                `${metric.label} changes: ${metric.val}`,
+                `${metric.label}: ${metric.val}`,
                 e.clientX + 15,
                 e.clientY + 15
             );
