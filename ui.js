@@ -364,14 +364,7 @@ function renderUnlinkedPlayers() {
 
         if (tags.length) {
             tagHTML = `
-                <div
-                    style="
-                        display:flex;
-                        gap:8px;
-                        margin-top:10px;
-                        flex-wrap:wrap;
-                    "
-                >
+                <div class="unlinked-badges">
                     ${tags.map(tag => `
                         <a
                             href="${tag.link || "#"}"
@@ -512,15 +505,15 @@ function renderUnlinkedPlayers() {
                     ?
                 </div>
 
-                <div style="flex:1;">
+                <div style="flex:1; min-width:0;">
                     <div class="username">${displayName}</div>
 
                     <div class="uuid">
                         No confirmed Minecraft main account
                     </div>
-
-                    ${tagHTML}
                 </div>
+
+                ${tagHTML}
             </div>
 
             ${discordHTML}
