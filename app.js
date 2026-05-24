@@ -124,89 +124,172 @@ function setupSearchFilter() {
 
     searchInput.addEventListener("input", (e) => {
         const query = e.target.value.toLowerCase().trim();
+
         // Cards use class "player" per style.css
         const cards = container.getElementsByClassName("player");
 
         // Loop cards array to verify parameters against users
         let index = 0;
+
         for (const mainUuid of uuids) {
+
             const card = cards[index++];
+
             if (!card) continue;
 
+            /* =========================
+               EMPTY SEARCH RESET
+               ========================= */
+
             if (query === "") {
+
                 card.style.display = "";
+
+                // Close all dropdowns when search cleared
+                const details = card.querySelectorAll("details");
+
+                details.forEach(detail => {
+                    detail.open = false;
+                });
+
                 continue;
             }
 
             const main = players.get(mainUuid);
+
             if (!main) {
                 card.style.display = "none";
                 continue;
             }
 
+            /* =========================
+               MAIN PROFILE CHECKS
+               ========================= */
+
             // 1. Root Profile Username Check
-            const matchMainName = main.username?.toLowerCase().includes(query);
+            const matchMainName =
+                main.username?.toLowerCase().includes(query);
 
-            // 2. Main Account Hardware UUID String Match Check
-            const matchMainUuid = main.uuid?.toLowerCase().includes(query);
+            // 2. Main UUID Match
+            const matchMainUuid =
+                main.uuid?.toLowerCase().includes(query);
 
-            // 3. Historical Text Log Name Checks
-            const matchHistory = (main.usernames || []).some(h => h.username?.toLowerCase().includes(query));
+            // 3. Username History Match
+            const matchHistory =
+                (main.usernames || []).some(h =>
+                    h.username?.toLowerCase().includes(query)
+                );
 
-            // 4. Manual Configuration Alts Text Tag Check
-            // manualAlts values are plain strings, not objects
+            /* =========================
+               MANUAL ALT CHECKS
+               ========================= */
+
             const manual = manualAlts[mainUuid] || [];
-            const matchManual = manual.some(m => m.toLowerCase().includes(query));
 
-            // 5. Linked Active System Alts Profiles Check
+            const matchManual =
+                manual.some(m =>
+                    m.toLowerCase().includes(query)
+                );
+
+            /* =========================
+               LINKED ALT CHECKS
+               ========================= */
+
             const alts = altMap[mainUuid] || [];
+
             let matchKnownAlts = false;
+
             for (const altUuid of alts) {
+
                 if (altUuid.toLowerCase().includes(query)) {
                     matchKnownAlts = true;
                     break;
                 }
+
                 const altProfile = players.get(altUuid);
-                if (altProfile && altProfile.username?.toLowerCase().includes(query)) {
+
+                if (
+                    altProfile &&
+                    altProfile.username?.toLowerCase().includes(query)
+                ) {
                     matchKnownAlts = true;
                     break;
                 }
             }
 
-            // 6. Discord Accounts Snowflake IDs and Display Names Matching
+            /* =========================
+               DISCORD CHECKS
+               ========================= */
+
             const discordIds = discordLinks[mainUuid] || [];
+
             let matchDiscord = false;
+
             for (const id of discordIds) {
+
                 if (id.includes(query)) {
                     matchDiscord = true;
                     break;
                 }
+
                 const dUser = getDiscordUser(id);
+
                 if (dUser) {
-                    if (dUser.username?.toLowerCase().includes(query) || dUser.global_name?.toLowerCase().includes(query)) {
+
+                    if (
+                        dUser.username?.toLowerCase().includes(query) ||
+                        dUser.global_name?.toLowerCase().includes(query)
+                    ) {
                         matchDiscord = true;
                         break;
                     }
                 }
             }
 
-            if (matchMainName || matchMainUuid || matchHistory || matchManual || matchKnownAlts || matchDiscord) {
-                card.style.display = "";
-            } else {
-                card.style.display = "none";
-            }
+            /* =========================
+               FINAL MATCH EVALUATION
+               ========================= */
+
+            const matches =
+                matchMainName ||
+                matchMainUuid ||
+                matchHistory ||
+                matchManual ||
+                matchKnownAlts ||
+                matchDiscord;
+
+            card.style.display = matches ? "" : "none";
+
+            /* =========================
+               AUTO OPEN DROPDOWNS
+               ========================= */
+
+            const details = card.querySelectorAll("details");
+
+            details.forEach(detail => {
+                detail.open = matches;
+            });
         }
     });
 
     // Retain focus when navigating back to list tab
     const tabsContainer = document.querySelector(".tabs");
+
     if (tabsContainer) {
+
         tabsContainer.addEventListener("click", () => {
+
             setTimeout(() => {
+
                 const listTab = document.getElementById("tab-list");
-                if (listTab && listTab.classList.contains("active")) {
+
+                if (
+                    listTab &&
+                    listTab.classList.contains("active")
+                ) {
                     searchInput.focus();
                 }
+
             }, 50);
         });
     }
@@ -214,11 +297,16 @@ function setupSearchFilter() {
 
 /* LIFE-CYCLE REFRESH LISTENERS */
 window.addEventListener("DOMContentLoaded", () => {
+
     const btn = document.getElementById("clear-cache-btn");
+
     if (btn) {
+
         btn.addEventListener("click", () => {
+
             // Clears LocalStorage caching pipeline setup in api.js
             localStorage.clear();
+
             location.reload();
         });
     }
