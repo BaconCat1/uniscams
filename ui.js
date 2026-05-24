@@ -38,8 +38,10 @@ function showRetryBanner() {
             cursor: pointer;
             z-index: 9999;
         `;
+
         // Bound to global handler in app.js
         el.onclick = retryFailedPlayers;
+
         document.body.appendChild(el);
     }
 
@@ -48,64 +50,95 @@ function showRetryBanner() {
 
 /* RENDER MAIN PLAYER CARDS AND TABS */
 function renderPlayers() {
-    initUI(); // Ensure elements are bound
+    initUI();
+
     if (!container) return;
 
     container.innerHTML = "";
 
     for (const mainUuid of uuids) {
         const main = players.get(mainUuid);
+
         if (!main) continue;
 
-        // CSS class is "player" per style.css — not "player-card"
         const card = document.createElement("div");
         card.className = "player";
+
         const head = `https://mc-heads.net/head/${mainUuid}.png`;
-		
-		// --- Server Badge ---
-		const serverTag = serverTags[mainUuid];
-		let serverBadgeHTML = "";
 
-		if (serverTag?.img) {
-			serverBadgeHTML = `
-				<a href="${serverTag.link || "#"}"
-				   target="_blank"
-				   class="server-badge-link">
-					<img
-						src="${serverTag.img}"
-						class="server-badge"
-						alt="Server Badge"
-					>
-				</a>
-			`;
-		}
+        /* =========================
+           SERVER BADGES
+           ========================= */
 
-        // --- Username History ---
+        const serverTag = serverTags[mainUuid];
+
+        let serverBadgeHTML = "";
+
+        if (serverTag?.img) {
+            serverBadgeHTML = `
+                <a
+                    href="${serverTag.link || "#"}"
+                    target="_blank"
+                    class="server-badge-link"
+                >
+                    <img
+                        src="${serverTag.img}"
+                        class="server-badge"
+                        alt="Server Badge"
+                    >
+                </a>
+            `;
+        }
+
+        /* =========================
+           USERNAME HISTORY
+           ========================= */
+
         const usernames = main.usernames || [];
+
         let usernameHistoryHTML = "";
 
         if (usernames.length) {
             usernameHistoryHTML = `
                 <details class="section">
                     <summary>Username History (${usernames.length})</summary>
+
                     <div class="alt-entry">
                         ${usernames.map(entry => {
-                            // Crafty API returns changed_at as an ISO string e.g. "2025-04-09T01:28:57.689+02:00"
-                            // Fall back to other common field names just in case
-                            const raw = entry.changed_at ?? entry.changedAt ?? entry.timestamp ?? entry.time ?? null;
+
+                            const raw =
+                                entry.changed_at ??
+                                entry.changedAt ??
+                                entry.timestamp ??
+                                entry.time ??
+                                null;
+
                             let dateStr = "";
+
                             if (raw) {
                                 const d = new Date(raw);
+
                                 if (!isNaN(d)) {
                                     dateStr = d.toLocaleDateString(undefined, {
-                                        year: "numeric", month: "short", day: "numeric"
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric"
                                     });
                                 }
                             }
+
                             return `
-                                <div class="alt-row" style="justify-content: space-between;">
+                                <div
+                                    class="alt-row"
+                                    style="justify-content:space-between;"
+                                >
                                     <div>${entry.username}</div>
-                                    ${dateStr ? `<div class="uuid">${dateStr}</div>` : ""}
+
+                                    ${
+                                        dateStr
+                                            ? `<div class="uuid">${dateStr}</div>`
+                                            : ""
+                                    }
                                 </div>
                             `;
                         }).join("")}
@@ -114,25 +147,46 @@ function renderPlayers() {
             `;
         }
 
-        // --- Linked Alts (from altMap) ---
+        /* =========================
+           LINKED ALTS
+           ========================= */
+
         const alts = altMap[mainUuid] || [];
+
         let knownAltHTML = "";
 
         if (alts.length) {
             knownAltHTML = `
                 <details class="section">
                     <summary>Alts (${alts.length})</summary>
+
                     <div class="alt-entry">
                         ${alts.map(altUuid => {
+
                             const altProfile = players.get(altUuid);
-                            const altHead = `https://mc-heads.net/head/${altUuid}.png`;
+
+                            const altHead =
+                                `https://mc-heads.net/head/${altUuid}.png`;
 
                             if (!altProfile) {
-                                return `<div class="alt-row"><span class="uuid">Loading: ${altUuid}</span></div>`;
+                                return `
+                                    <div class="alt-row">
+                                        <span class="uuid">
+                                            Loading: ${altUuid}
+                                        </span>
+                                    </div>
+                                `;
                             }
+
                             return `
                                 <div class="alt-row">
-                                    <img src="${altHead}" width="24" height="24" style="border-radius:2px;">
+                                    <img
+                                        src="${altHead}"
+                                        width="24"
+                                        height="24"
+                                        style="border-radius:2px;"
+                                    >
+
                                     <div>
                                         <div>${altProfile.username}</div>
                                         <div class="uuid">${altProfile.uuid}</div>
@@ -145,15 +199,19 @@ function renderPlayers() {
             `;
         }
 
-        // --- Manual Alts ---
-        // Values are plain strings per data.json
+        /* =========================
+           MANUAL ALTS
+           ========================= */
+
         const manuals = manualAlts[mainUuid] || [];
+
         let manualAltHTML = "";
 
         if (manuals.length) {
             manualAltHTML = `
                 <details class="section">
                     <summary>Manual Alts (${manuals.length})</summary>
+
                     <div class="alt-entry">
                         ${manuals.map(name => `
                             <div class="alt-row">${name}</div>
@@ -163,29 +221,72 @@ function renderPlayers() {
             `;
         }
 
-        // --- Discord Accounts ---
-        // Uses .discord-card / .discord-avatar / .discord-info / .discord-id per style.css
+        /* =========================
+           DISCORD ACCOUNTS
+           ========================= */
+
         const discordIds = discordLinks[mainUuid] || [];
+
         let discordHTML = "";
 
         if (discordIds.length) {
             discordHTML = `
                 <details class="section">
                     <summary>Discord Accounts (${discordIds.length})</summary>
+
                     <div class="alt-entry">
                         ${discordIds.map(id => {
+
                             const dUser = getDiscordUser(id);
-                            const avatar = dUser ? getDiscordAvatar(dUser) : "";
-                            const displayName = dUser ? (dUser.global_name || dUser.username || id) : id;
+
+                            const avatar =
+                                dUser ? getDiscordAvatar(dUser) : "";
+
+                            const displayName = dUser
+                                ? (dUser.global_name || dUser.username || id)
+                                : id;
+
                             const username = dUser?.username || "";
+
                             return `
                                 <div class="discord-card">
-                                    ${avatar
-                                        ? `<img class="discord-avatar" src="${avatar}" width="40" height="40">`
-                                        : `<div class="discord-avatar" style="width:40px;height:40px;background:#1e1f22;"></div>`
+
+                                    ${
+                                        avatar
+                                            ? `
+                                                <img
+                                                    class="discord-avatar"
+                                                    src="${avatar}"
+                                                    width="40"
+                                                    height="40"
+                                                >
+                                            `
+                                            : `
+                                                <div
+                                                    class="discord-avatar"
+                                                    style="
+                                                        width:40px;
+                                                        height:40px;
+                                                        background:#1e1f22;
+                                                    "
+                                                ></div>
+                                            `
                                     }
+
                                     <div class="discord-info">
-                                        <a href="https://discord.com/users/${id}" target="_blank">${displayName}${username && username !== displayName ? ` (@${username})` : ""}</a>
+                                        <a
+                                            href="https://discord.com/users/${id}"
+                                            target="_blank"
+                                        >
+                                            ${displayName}
+                                            ${
+                                                username &&
+                                                username !== displayName
+                                                    ? ` (@${username})`
+                                                    : ""
+                                            }
+                                        </a>
+
                                         <span class="discord-id">${id}</span>
                                     </div>
                                 </div>
@@ -196,28 +297,44 @@ function renderPlayers() {
             `;
         }
 
+        /* =========================
+           CARD HTML
+           ========================= */
+
         card.innerHTML = `
             <div class="player-header">
-				<img src="${head}" width="64" height="64" style="border-radius:4px;">
 
-				<div style="flex:1;">
-					<div class="username">${main.username}</div>
-					<div class="uuid">${main.uuid}</div>
-				</div>
+                <img
+                    src="${head}"
+                    width="64"
+                    height="64"
+                    style="border-radius:4px;"
+                >
 
-				${serverBadgeHTML}
-			</div>
+                <div style="flex:1;">
+                    <div class="username">${main.username}</div>
+                    <div class="uuid">${main.uuid}</div>
+                </div>
+
+                ${serverBadgeHTML}
+            </div>
+
             ${knownAltHTML}
             ${manualAltHTML}
             ${discordHTML}
             ${usernameHistoryHTML}
         `;
+
         container.appendChild(card);
     }
+
     renderUnlinkedPlayers();
 }
 
-/* RENDER UNLINKED/AMBIGUOUS SYSTEM HISTORICAL CARDS */
+/* ========================================================
+   RENDER UNLINKED / AMBIGUOUS PROFILES
+   ======================================================== */
+
 function renderUnlinkedPlayers() {
     initUI();
 
@@ -226,20 +343,65 @@ function renderUnlinkedPlayers() {
     if (!container || !unlinkedDataArray.length) return;
 
     for (const entry of unlinkedDataArray) {
+
         const card = document.createElement("div");
+
         card.className = "player unlinked-profile";
 
         const displayName = entry.name || "Unknown Player";
+
         const discordId = entry.discordId;
-        const source = entry.source || "Unknown";
+
         const note = entry.note || "";
 
-        // Match normal card Discord rendering
+        /* =========================
+           TAGS / BADGES
+           ========================= */
+
+        const tags = entry.tags || [];
+
+        let tagHTML = "";
+
+        if (tags.length) {
+            tagHTML = `
+                <div
+                    style="
+                        display:flex;
+                        gap:8px;
+                        margin-top:10px;
+                        flex-wrap:wrap;
+                    "
+                >
+                    ${tags.map(tag => `
+                        <a
+                            href="${tag.link || "#"}"
+                            target="_blank"
+                            class="server-badge-link"
+                        >
+                            <img
+                                src="${tag.img}"
+                                class="server-badge"
+                                alt="Tag Badge"
+                            >
+                        </a>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        /* =========================
+           DISCORD ACCOUNT
+           ========================= */
+
         let discordHTML = "";
 
         if (discordId) {
+
             const dUser = getDiscordUser(discordId);
-            const avatar = dUser ? getDiscordAvatar(dUser) : "";
+
+            const avatar =
+                dUser ? getDiscordAvatar(dUser) : "";
+
             const globalName = dUser
                 ? (dUser.global_name || dUser.username || discordId)
                 : discordId;
@@ -251,19 +413,49 @@ function renderUnlinkedPlayers() {
                     <summary>Discord Account</summary>
 
                     <div class="alt-entry">
+
                         <div class="discord-card">
+
                             ${
                                 avatar
-                                    ? `<img class="discord-avatar" src="${avatar}" width="40" height="40">`
-                                    : `<div class="discord-avatar" style="width:40px;height:40px;background:#1e1f22;"></div>`
+                                    ? `
+                                        <img
+                                            class="discord-avatar"
+                                            src="${avatar}"
+                                            width="40"
+                                            height="40"
+                                        >
+                                    `
+                                    : `
+                                        <div
+                                            class="discord-avatar"
+                                            style="
+                                                width:40px;
+                                                height:40px;
+                                                background:#1e1f22;
+                                            "
+                                        ></div>
+                                    `
                             }
 
                             <div class="discord-info">
-                                <a href="https://discord.com/users/${discordId}" target="_blank">
-                                    ${globalName}${username && username !== globalName ? ` (@${username})` : ""}
+
+                                <a
+                                    href="https://discord.com/users/${discordId}"
+                                    target="_blank"
+                                >
+                                    ${globalName}
+                                    ${
+                                        username &&
+                                        username !== globalName
+                                            ? ` (@${username})`
+                                            : ""
+                                    }
                                 </a>
 
-                                <span class="discord-id">${discordId}</span>
+                                <span class="discord-id">
+                                    ${discordId}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -271,30 +463,26 @@ function renderUnlinkedPlayers() {
             `;
         }
 
-        // Separate metadata dropdown
+        /* =========================
+           METADATA
+           ========================= */
+
         let metadataHTML = `
             <details class="section">
                 <summary>Unlinked Metadata</summary>
 
                 <div class="alt-entry">
 
-                    <div class="alt-row">
-                        <div>
-                            <div>Source</div>
-                            <div class="uuid">${source}</div>
-                        </div>
-                    </div>
-
                     ${
                         note
                             ? `
-                        <div class="alt-row">
-                            <div>
-                                <div>Note</div>
-                                <div class="uuid">${note}</div>
-                            </div>
-                        </div>
-                    `
+                                <div class="alt-row">
+                                    <div>
+                                        <div>Note</div>
+                                        <div class="uuid">${note}</div>
+                                    </div>
+                                </div>
+                            `
                             : ""
                     }
 
@@ -302,8 +490,13 @@ function renderUnlinkedPlayers() {
             </details>
         `;
 
+        /* =========================
+           FINAL CARD
+           ========================= */
+
         card.innerHTML = `
             <div class="player-header">
+
                 <div
                     style="
                         width:64px;
@@ -321,7 +514,12 @@ function renderUnlinkedPlayers() {
 
                 <div style="flex:1;">
                     <div class="username">${displayName}</div>
-                    <div class="uuid">No confirmed Minecraft main account</div>
+
+                    <div class="uuid">
+                        No confirmed Minecraft main account
+                    </div>
+
+                    ${tagHTML}
                 </div>
             </div>
 
