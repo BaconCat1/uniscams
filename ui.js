@@ -383,6 +383,34 @@ function renderUnlinkedPlayers() {
         }
 
         /* =========================
+           UNLINKED ALTS
+           ========================= */
+
+        const unlinkedAlts = entry.alts || [];
+
+        let unlinkedAltHTML = "";
+
+        if (unlinkedAlts.length) {
+            unlinkedAltHTML = `
+                <details class="section">
+                    <summary>Possible Alts (${unlinkedAlts.length})</summary>
+
+                    <div class="alt-entry">
+                        ${unlinkedAlts.map(alt => `
+							<div class="alt-row">
+								${
+									typeof alt === "string"
+										? alt
+										: (alt.name || alt.username || alt.uuid || "Unknown Alt")
+								}
+							</div>
+						`).join("")}
+                    </div>
+                </details>
+            `;
+        }
+
+        /* =========================
            DISCORD ACCOUNT
            ========================= */
 
@@ -516,6 +544,7 @@ function renderUnlinkedPlayers() {
                 ${tagHTML}
             </div>
 
+            ${unlinkedAltHTML}
             ${discordHTML}
             ${metadataHTML}
         `;
