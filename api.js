@@ -13,8 +13,11 @@ const players = new Map();
 const failedPlayers = new Set();
 
 const PLAYER_TTL = 1000 * 60 * 60 * 6; // 6 Hours cache TTL
-const REQUEST_DELAY = 120; // 120ms Crafty API throttle delay
-let lastRequest = 0;
+const REQUEST_DELAY = 150; // delay between requests, attempted to dial in by hand
+// 150ms ttl: 
+// 300ms ttl: 110 sec
+
+let rateLimitChain = Promise.resolve();
 
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -60,45 +63,39 @@ function setCachedPlayer(uuid, data) {
     }));
 }
 
-/* RATE LIMIT HANDLER */
+/* RATE LIMIT HANDLER — promise chain ensures strict serialization across all workers */
 async function rateLimit() {
-    const diff = Date.now() - lastRequest;
-    if (diff < REQUEST_DELAY) {
-        await wait(REQUEST_DELAY - diff);
-    }
-    lastRequest = Date.now();
+    const next = rateLimitChain.then(() => wait(REQUEST_DELAY));
+    rateLimitChain = next;
+    await next;
 }
 
-/* CRAFTY API CALLER WITH RETRIES */
+/* CRAFTY API CALLER — single attempt, queue handles retries */
 async function fetchPlayer(uuid) {
     const cached = getCachedPlayer(uuid);
     if (cached) return cached;
 
-    for (let i = 0; i < 4; i++) {
-        try {
-            await rateLimit();
+    await rateLimit();
 
-            const res = await fetch(`https://api.crafty.gg/api/v2/players/${uuid}`);
+    try {
+        const res = await fetch(`https://api.crafty.gg/api/v2/players/${uuid}`);
 
-            if (res.status === 429) {
-                await wait(1000 + i * 1500);
-                continue;
-            }
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-            const json = await res.json();
-            if (!json?.data) throw new Error("Bad response");
-
-            setCachedPlayer(uuid, json.data);
-            failedPlayers.delete(uuid);
-            return json.data;
-
-        } catch {
-            await wait(400 * Math.pow(2, i));
+        if (res.status === 429) {
+            await wait(1500); // brief pause before returning to queue
+            return null;
         }
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const json = await res.json();
+        if (!json?.data) throw new Error("Bad response");
+
+        setCachedPlayer(uuid, json.data);
+        return json.data;
+
+    } catch {
+        return null;
     }
-    return null;
 }
 
 /* UTILITIES FOR DISCORD RESOLUTION */

@@ -29,17 +29,30 @@ async function loadPlayers() {
 
     let loaded = 0;
     const queue = [...all];
+    const retryCounts = new Map();
+    const MAX_RETRIES = 3;
+
+    const loadStart = performance.now();
 
     // Fire asynchronous worker threads concurrently
-    const workers = Array.from({ length: 3 }, async () => {
+    const workers = Array.from({ length: 5 }, async () => {
         while (queue.length) {
             const uuid = queue.shift();
             const data = await fetchPlayer(uuid);
 
-            if (data) players.set(uuid, data);
-            else failedPlayers.add(uuid);
-
-            loaded++;
+            if (data) {
+                players.set(uuid, data);
+                loaded++;
+            } else {
+                const attempts = (retryCounts.get(uuid) || 0) + 1;
+                if (attempts < MAX_RETRIES) {
+                    retryCounts.set(uuid, attempts);
+                    queue.push(uuid); // re-queue at the back, worker stays productive
+                } else {
+                    failedPlayers.add(uuid);
+                    loaded++;
+                }
+            }
 
             // Global type evaluation wrapper to block ReferenceErrors
             if (typeof loadingText !== 'undefined' && loadingText) {
@@ -52,6 +65,14 @@ async function loadPlayers() {
     });
 
     await Promise.all(workers);
+
+    const loadMs = performance.now() - loadStart;
+    const loadSec = (loadMs / 1000).toFixed(2);
+    const success = all.length - failedPlayers.size;
+    console.log(
+        `[uniscams] loaded ${success}/${all.length} players in ${loadSec}s` +
+        ` (REQUEST_DELAY: ${REQUEST_DELAY}ms, ${failedPlayers.size} failed)`
+    );
 
     renderPlayers();
     showRetryBanner();
@@ -92,15 +113,27 @@ async function retryFailedPlayers() {
         loadingScreen.style.display = "block";
     }
 
-    const workers = Array.from({ length: 3 }, async () => {
+    const workers = Array.from({ length: 5 }, async () => {
+        const retryCounts = new Map();
+        const MAX_RETRIES = 3;
         while (queue.length) {
             const uuid = queue.shift();
             const data = await fetchPlayer(uuid);
 
-            if (data) players.set(uuid, data);
-            else failedPlayers.add(uuid);
+            if (data) {
+                players.set(uuid, data);
+                loaded++;
+            } else {
+                const attempts = (retryCounts.get(uuid) || 0) + 1;
+                if (attempts < MAX_RETRIES) {
+                    retryCounts.set(uuid, attempts);
+                    queue.push(uuid);
+                } else {
+                    failedPlayers.add(uuid);
+                    loaded++;
+                }
+            }
 
-            loaded++;
             if (typeof loadingText !== 'undefined' && loadingText) {
                 loadingText.innerText = `Retrying ${loaded}/${allCount}`;
             }
