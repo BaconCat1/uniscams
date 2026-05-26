@@ -239,7 +239,11 @@ function setupSearchFilter() {
 
     searchInput.addEventListener("input", (e) => {
         const query = e.target.value.toLowerCase().trim();
+        let visibleCount = 0;
 
+        /* ========================================================
+           PART A: FILTER STANDARD PLAYER CARDS (MAIN ACCOUNTS)
+           ======================================================== */
         for (const mainUuid of uuids) {
             const card = container.querySelector(`[data-uuid="${mainUuid}"]`);
             if (!card) continue;
@@ -252,6 +256,8 @@ function setupSearchFilter() {
                 details.forEach(detail => {
                     detail.open = false;
                 });
+                
+                visibleCount++;
                 continue;
             }
 
@@ -318,12 +324,86 @@ function setupSearchFilter() {
                 matchDiscord;
 
             card.style.display = matches ? "" : "none";
-            if (matches) highlightMatches(card, query);
+            if (matches) {
+                highlightMatches(card, query);
+                visibleCount++;
+            }
 
             const details = card.querySelectorAll("details");
             details.forEach(detail => {
                 detail.open = matches;
             });
+        }
+
+        /* ========================================================
+           PART B: FILTER UNLINKED PLAYER CARDS (NO MAIN ACCOUNT)
+           ======================================================== */
+        const unlinkedCards = container.querySelectorAll(".player.unlinked-profile");
+        
+        unlinkedCards.forEach((card, idx) => {
+            const entry = unlinked[idx];
+            if (!entry) return;
+
+            if (query === "") {
+                card.style.display = "";
+                highlightMatches(card, "");
+                
+                const details = card.querySelectorAll("details");
+                details.forEach(detail => {
+                    detail.open = false;
+                });
+                
+                visibleCount++;
+                return;
+            }
+
+            // Match structural criteria fields for unlinked array elements
+            const matchName = entry.name?.toLowerCase().includes(query);
+            const matchNote = entry.note?.toLowerCase().includes(query);
+            
+            // Normalize custom discord layout signatures
+            let matchDiscord = false;
+            const unlinkedDiscordIds = Array.isArray(entry.discordLinks) 
+                ? entry.discordLinks.filter(Boolean) 
+                : (entry.discordId ? [entry.discordId] : []);
+
+            for (const id of unlinkedDiscordIds) {
+                if (id.includes(query)) {
+                    matchDiscord = true;
+                    break;
+                }
+                const dUser = getDiscordUser(id);
+                if (dUser) {
+                    if (
+                        dUser.username?.toLowerCase().includes(query) ||
+                        dUser.global_name?.toLowerCase().includes(query)
+                    ) {
+                        matchDiscord = true;
+                        break;
+                    }
+                }
+            }
+
+            const matches = matchName || matchNote || matchDiscord;
+
+            card.style.display = matches ? "" : "none";
+            if (matches) {
+                highlightMatches(card, query);
+                visibleCount++;
+            }
+
+            const details = card.querySelectorAll("details");
+            details.forEach(detail => {
+                detail.open = matches;
+            });
+        });
+
+        /* ========================================================
+           PART C: TOGGLE EMPTY STATE RESULTS CONTAINER
+           ======================================================== */
+        const noResults = document.getElementById("no-results");
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? "block" : "none";
         }
     });
 
