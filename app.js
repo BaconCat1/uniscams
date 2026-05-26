@@ -19,11 +19,36 @@ async function loadPlayers() {
     altMap = normalizedAltMap;
     await loadDiscordData();
 
+    // ====================================================
+    // PRE-FETCH LIVE DISCORD ACCOUNTS
+    // ====================================================
+    if (typeof loadingText !== 'undefined' && loadingText) {
+        loadingText.innerText = `Resolving Discord accounts...`;
+    }
+
+    const allDiscordIds = new Set();
+    
+    // Extract linked IDs
+    Object.values(discordLinks).forEach(arr => {
+        arr.forEach(id => allDiscordIds.add(id));
+    });
+    
+    // Extract unlinked IDs
+    (unlinked || []).forEach(entry => {
+        if (Array.isArray(entry.discordLinks)) {
+            entry.discordLinks.forEach(id => allDiscordIds.add(id));
+        } else if (entry.discordId) {
+            allDiscordIds.add(entry.discordId);
+        }
+    });
+
+    await resolveDiscordUsers([...allDiscordIds]);
+    // ====================================================
+
     // Expose unlinked globally right away for ui.js scope mapping security
     window.unlinked = unlinked || [];
 
     // Deduplicate profiles to determine total distinct profiles needed.
-    // After inversion, alt UUIDs live in altMap VALUES not keys — flatten them.
     const allAltUuids = Object.values(altMap).flat();
     const all = [...new Set([...uuids, ...allAltUuids])];
 
@@ -35,13 +60,8 @@ async function loadPlayers() {
 
     const loadStart = performance.now();
 
-    // 3 concurrent workers — parallel throughput without excessive bursting.
-    // Each worker awaits the rate-limit pause *before dequeuing* so no request
-    // is started while the window is closed. On a 429 (RATE_LIMITED sentinel)
-    // the UUID is re-queued without burning a retry attempt.
     const workers = Array.from({ length: 3 }, async () => {
         while (queue.length) {
-            // Wait out any active rate-limit window before touching the queue
             const pause = getRateLimitPause();
             if (pause) await pause;
 
@@ -50,7 +70,6 @@ async function loadPlayers() {
             const data = await fetchPlayer(uuid);
 
             if (data === RATE_LIMITED) {
-                // Don't count this as a retry — just put it back
                 queue.push(uuid);
                 continue;
             }
@@ -62,14 +81,13 @@ async function loadPlayers() {
                 const attempts = (retryCounts.get(uuid) || 0) + 1;
                 if (attempts < MAX_RETRIES) {
                     retryCounts.set(uuid, attempts);
-                    queue.push(uuid); // re-queue at the back, worker stays productive
+                    queue.push(uuid); 
                 } else {
                     failedPlayers.add(uuid);
                     loaded++;
                 }
             }
 
-            // Global type evaluation wrapper to block ReferenceErrors
             if (typeof loadingText !== 'undefined' && loadingText) {
                 loadingText.innerText = `Loading ${loaded}/${all.length}`;
             }
@@ -96,7 +114,6 @@ async function loadPlayers() {
         loadingScreen.style.display = "none";
     }
 
-    // Expose local arrays globally for window scope binding compatibility (graphs.js integration)
     window.players = players;
     window.statsData = {
         uuids: uuids,
@@ -108,7 +125,6 @@ async function loadPlayers() {
 
     if (window.renderStats) window.renderStats();
 
-    // Initialize Global Interactive Live Input Filter Search Engine
     setupSearchFilter();
 }
 
@@ -119,7 +135,6 @@ async function retryFailedPlayers() {
     const queue = [...failedPlayers];
     failedPlayers.clear();
 
-    // Mirror the same alt UUID count logic from loadPlayers
     const allAltUuids = Object.values(altMap).flat();
     const allCount = [...new Set([...uuids, ...allAltUuids])].length;
     let loaded = allCount - queue.length;
@@ -178,8 +193,6 @@ async function retryFailedPlayers() {
 
 /* SEARCH HIGHLIGHT ENGINE */
 function highlightMatches(el, query) {
-
-    // Remove any existing highlights and restore plain text nodes
     el.querySelectorAll("mark.search-highlight").forEach(mark => {
         mark.replaceWith(mark.textContent);
     });
@@ -187,7 +200,6 @@ function highlightMatches(el, query) {
 
     if (!query) return;
 
-    // Walk only text nodes — skips attribute values, scripts, etc.
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     const nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -229,111 +241,64 @@ function setupSearchFilter() {
         const query = e.target.value.toLowerCase().trim();
 
         for (const mainUuid of uuids) {
-
             const card = container.querySelector(`[data-uuid="${mainUuid}"]`);
-
             if (!card) continue;
 
-            /* =========================
-               EMPTY SEARCH RESET
-               ========================= */
-
             if (query === "") {
-
                 card.style.display = "";
                 highlightMatches(card, "");
 
-                // Close all dropdowns when search cleared
                 const details = card.querySelectorAll("details");
-
                 details.forEach(detail => {
                     detail.open = false;
                 });
-
                 continue;
             }
 
             const main = players.get(mainUuid);
-
             if (!main) {
                 card.style.display = "none";
                 continue;
             }
 
-            /* =========================
-               MAIN PROFILE CHECKS
-               ========================= */
-
-            // 1. Root Profile Username Check
-            const matchMainName =
-                main.username?.toLowerCase().includes(query);
-
-            // 2. Main UUID Match
-            const matchMainUuid =
-                main.uuid?.toLowerCase().includes(query);
-
-            // 3. Username History Match
-            const matchHistory =
-                (main.usernames || []).some(h =>
-                    h.username?.toLowerCase().includes(query)
-                );
-
-            /* =========================
-               MANUAL ALT CHECKS
-               ========================= */
+            const matchMainName = main.username?.toLowerCase().includes(query);
+            const matchMainUuid = main.uuid?.toLowerCase().includes(query);
+            const matchHistory = (main.usernames || []).some(h =>
+                h.username?.toLowerCase().includes(query)
+            );
 
             const manual = manualAlts[mainUuid] || [];
-
-            const matchManual =
-                manual.some(m =>
-                    m.toLowerCase().includes(query)
-                );
-
-            /* =========================
-               LINKED ALT CHECKS
-               ========================= */
+            const matchManual = manual.some(m =>
+                m.toLowerCase().includes(query)
+            );
 
             const alts = altMap[mainUuid] || [];
-
             let matchKnownAlts = false;
 
             for (const altUuid of alts) {
-
                 if (altUuid.toLowerCase().includes(query)) {
                     matchKnownAlts = true;
                     break;
                 }
 
                 const altProfile = players.get(altUuid);
-
-                if (
-                    altProfile &&
-                    altProfile.username?.toLowerCase().includes(query)
-                ) {
+                if (altProfile && altProfile.username?.toLowerCase().includes(query)) {
                     matchKnownAlts = true;
                     break;
                 }
             }
 
-            /* =========================
-               DISCORD CHECKS
-               ========================= */
-
             const discordIds = discordLinks[mainUuid] || [];
-
             let matchDiscord = false;
 
             for (const id of discordIds) {
-
                 if (id.includes(query)) {
                     matchDiscord = true;
                     break;
                 }
 
                 const dUser = getDiscordUser(id);
-
                 if (dUser) {
-
                     if (
                         dUser.username?.toLowerCase().includes(query) ||
                         dUser.global_name?.toLowerCase().includes(query)
@@ -343,10 +308,6 @@ function setupSearchFilter() {
                     }
                 }
             }
-
-            /* =========================
-               FINAL MATCH EVALUATION
-               ========================= */
 
             const matches =
                 matchMainName ||
@@ -359,36 +320,21 @@ function setupSearchFilter() {
             card.style.display = matches ? "" : "none";
             if (matches) highlightMatches(card, query);
 
-            /* =========================
-               AUTO OPEN DROPDOWNS
-               ========================= */
-
             const details = card.querySelectorAll("details");
-
             details.forEach(detail => {
                 detail.open = matches;
             });
         }
     });
 
-    // Retain focus when navigating back to list tab
     const tabsContainer = document.querySelector(".tabs");
-
     if (tabsContainer) {
-
         tabsContainer.addEventListener("click", () => {
-
             setTimeout(() => {
-
                 const listTab = document.getElementById("tab-list");
-
-                if (
-                    listTab &&
-                    listTab.classList.contains("active")
-                ) {
+                if (listTab && listTab.classList.contains("active")) {
                     searchInput.focus();
                 }
-
             }, 50);
         });
     }
@@ -396,20 +342,13 @@ function setupSearchFilter() {
 
 /* LIFE-CYCLE REFRESH LISTENERS */
 window.addEventListener("DOMContentLoaded", () => {
-
     const btn = document.getElementById("clear-cache-btn");
-
     if (btn) {
-
         btn.addEventListener("click", () => {
-
-            // Clears LocalStorage caching pipeline setup in api.js
             localStorage.clear();
-
             location.reload();
         });
     }
 
-    // Kickstart application engine load sequence
     loadPlayers();
 });

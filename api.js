@@ -7,12 +7,14 @@ let manualAlts = {};
 let discordLinks = {};
 let serverTags = {};
 let discordData = {};
+let discordFallbackData = {};
 let unlinked = [];
 
 const players = new Map();
 const failedPlayers = new Set();
 
 const PLAYER_TTL = 1000 * 60 * 60 * 6; // 6 Hours cache TTL
+const DISCORD_TTL = 1000 * 60 * 60 * 6; // 6 Hours cache TTL for Discord
 
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -35,7 +37,14 @@ async function loadConfig() {
 
 async function loadDiscordData() {
     const res = await fetch("./discord.json");
-    discordData = res.ok ? await res.json() : {};
+    discordFallbackData = res.ok ? await res.json() : {};
+    
+    // Initialize the main data pool with the fallback.
+    // Live fetching will selectively overwrite these keys.
+    discordData = { ...discordFallbackData };
+    if (discordFallbackData.users) {
+        discordData = { ...discordData, ...discordFallbackData.users };
+    }
 }
 
 /* LOCALSTORAGE CACHING PIPELINE */
@@ -58,20 +67,83 @@ function setCachedPlayer(uuid, data) {
     }));
 }
 
-/* RATE LIMIT PAUSE — shared across all workers.
-   When a 429 fires (or remaining hits 0), this is set to a promise
-   that resolves after the Retry-After / x-ratelimit-reset duration.
-   Workers await getRateLimitPause() *before dequeuing* each UUID so
-   no request is even started while the window is exhausted. */
-let rateLimitPause = null;
+/* ========================================================
+   LIVE DISCORD RESOLUTION & METRICS ENGINE
+   ======================================================== */
 
-/* Sentinel returned by fetchPlayer on a 429 so the worker can re-queue
-   the UUID without burning a retry attempt. */
+function getCachedDiscordUser(id) {
+    const raw = localStorage.getItem(`discord:${id}`);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.time > DISCORD_TTL) {
+        localStorage.removeItem(`discord:${id}`);
+        return null;
+    }
+    return parsed.data;
+}
+
+function setCachedDiscordUser(id, data) {
+    localStorage.setItem(`discord:${id}`, JSON.stringify({
+        time: Date.now(),
+        data: data
+    }));
+}
+
+async function fetchLiveDiscordUser(id) {
+    const cached = getCachedDiscordUser(id);
+    if (cached) return cached;
+
+    try {
+        // REPAIRED: Correct production URL endpoint for JAPI Discord resolution
+        const res = await fetch(`https://japi.rest/discord/v1/user/${id}`);
+        if (!res.ok) return null;
+        
+        const json = await res.json();
+        const data = json.data; 
+        
+        if (data && data.id) {
+            setCachedDiscordUser(id, data);
+        }
+        return data;
+    } catch (e) {
+        return null; // Silent fail to fallback
+    }
+}
+
+async function resolveDiscordUsers(ids) {
+    const resolveStart = performance.now();
+    let successCount = 0;
+    let failCount = 0;
+    const total = ids.length;
+
+    // Process in chunks of 10 to avoid blasting the API and getting rate limited
+    const chunkSize = 10;
+    for (let i = 0; i < total; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        await Promise.all(chunk.map(async (id) => {
+            const liveData = await fetchLiveDiscordUser(id);
+            if (liveData) {
+                discordData[id] = liveData; // Overwrite fallback with live payload
+                successCount++;
+            } else {
+                failCount++;
+            }
+        }));
+    }
+
+    const resolveMs = performance.now() - resolveStart;
+    const resolveSec = (resolveMs / 1000).toFixed(2);
+    console.log(`[uniscams] resolved ${successCount}/${total} discord accounts in ${resolveSec}s (${failCount} failed)`);
+}
+
+/* Rate limit pause setup */
+let rateLimitPause = null;
 const RATE_LIMITED = Symbol("RATE_LIMITED");
-window._craftyRateLimited = RATE_LIMITED; // expose for app.js worker loop
+window._craftyRateLimited = RATE_LIMITED; 
 
 function _setRateLimitPause(headers) {
-    if (rateLimitPause) return; // already waiting — don't clobber
+    if (rateLimitPause) return; 
     const reset  = headers && headers.get("x-ratelimit-reset");
     const waitMs = reset
         ? Math.max(0, new Date(reset).getTime() - Date.now())
@@ -80,15 +152,13 @@ function _setRateLimitPause(headers) {
     rateLimitPause = wait(waitMs).then(() => { rateLimitPause = null; });
 }
 
-/* Workers call this before dequeuing to avoid firing into a closed window */
 function getRateLimitPause() { return rateLimitPause; }
 
-/* CRAFTY API CALLER — proactively reads rate-limit headers */
+/* CRAFTY API CALLER */
 async function fetchPlayer(uuid) {
     const cached = getCachedPlayer(uuid);
     if (cached) return cached;
 
-    // Belt-and-suspenders guard; workers should already be awaiting the pause
     if (rateLimitPause) await rateLimitPause;
 
     try {
@@ -96,7 +166,7 @@ async function fetchPlayer(uuid) {
 
         if (res.status === 429) {
             _setRateLimitPause(res.headers);
-            return RATE_LIMITED; // worker re-queues without burning a retry
+            return RATE_LIMITED; 
         }
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -106,8 +176,6 @@ async function fetchPlayer(uuid) {
 
         setCachedPlayer(uuid, json.data);
 
-        // Proactively pause when quota exhausted so the next dequeue
-        // doesn't immediately 429.
         const remaining = parseInt(res.headers.get("x-ratelimit-remaining") ?? "1", 10);
         if (remaining === 0) {
             _setRateLimitPause(res.headers);
