@@ -572,6 +572,64 @@ function renderUnlinkedPlayers() {
 }
 
 /* ========================================================
+   RENDER ARCHIVES TAB
+   ======================================================== */
+
+function renderArchives() {
+    const archiveGrid = document.getElementById("archive-grid");
+    if (!archiveGrid) return;
+
+    // Already rendered
+    if (archiveGrid.children.length > 0) return;
+
+    const registry = window.SERVER_REGISTRY || [];
+
+    registry.forEach(server => {
+        const archivePath = `./archives/${server.shortName}_scammer_list.zip`;
+
+        const card = document.createElement("div");
+        card.className = "archive-card archive-checking";
+
+        card.innerHTML = `
+            <img
+                src="${server.img}"
+                class="archive-server-img"
+                alt="${server.label}"
+            >
+            <div class="archive-label">${server.label}</div>
+            <span class="archive-na-badge">Checking...</span>
+        `;
+
+        archiveGrid.appendChild(card);
+
+        // Probe whether the archive file actually exists
+        fetch(archivePath, { method: "HEAD", cache: "no-store" })
+            .then(res => {
+                card.classList.remove("archive-checking");
+                const badge = card.querySelector(".archive-na-badge");
+                if (res.ok) {
+                    if (badge) badge.remove();
+                    const btn = document.createElement("a");
+                    btn.className = "archive-dl-btn";
+                    btn.href = archivePath;
+                    btn.download = "";
+                    btn.textContent = "⬇ Download";
+                    card.appendChild(btn);
+                } else {
+                    card.classList.add("archive-unavailable");
+                    if (badge) badge.textContent = "Not yet available";
+                }
+            })
+            .catch(() => {
+                card.classList.remove("archive-checking");
+                card.classList.add("archive-unavailable");
+                const badge = card.querySelector(".archive-na-badge");
+                if (badge) badge.textContent = "Not yet available";
+            });
+    });
+}
+
+/* ========================================================
    RENDER PLACEHOLDER CARDS FOR FAILED PLAYERS
    ======================================================== */
 function renderFailedPlayers() {

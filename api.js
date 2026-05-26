@@ -1,6 +1,21 @@
 /* ========================================================
    API & DATA LAYER (api.js)
    ======================================================== */
+
+/* ========================================================
+   SERVER REGISTRY — single source of truth for all servers.
+   shortName drives the archive filename: {shortName}_scammer_list.zip
+   available: false = no archive exported yet (shown as disabled).
+   ======================================================== */
+const SERVER_REGISTRY = [
+    { img: "unez.png", label: "Uneasy Vanilla", shortName: "unez" },
+    { img: "sv.png",   label: "Simply Vanilla",  shortName: "sv"   },
+    { img: "axn.png",  label: "Anarchy Network", shortName: "axn"  },
+    { img: "pv.png",   label: "Purity Vanilla",  shortName: "pv"   },
+    { img: "rv.png",   label: "Refined Vanilla", shortName: "rv"   },
+];
+window.SERVER_REGISTRY = SERVER_REGISTRY;
+
 let uuids = [];
 let altMap = {};
 let manualAlts = {};

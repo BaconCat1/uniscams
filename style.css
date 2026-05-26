@@ -281,3 +281,77 @@ mark.search-highlight {
     background: linear-gradient(145deg, #161616, #111);
     opacity: 0.6;
 }
+
+/* =====================
+   ARCHIVES TAB
+===================== */
+.archive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.archive-card {
+    background: #111214;
+    border: 1px solid #2b2d31;
+    border-radius: 10px;
+    padding: 18px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    transition: border-color 0.15s ease;
+}
+
+.archive-card:hover {
+    border-color: #4CAF50;
+}
+
+.archive-card.archive-unavailable {
+    opacity: 0.5;
+    border-color: #333;
+}
+
+.archive-card.archive-unavailable:hover {
+    border-color: #444;
+}
+
+.archive-server-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.archive-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #dbdee1;
+}
+
+.archive-dl-btn {
+    display: inline-block;
+    padding: 6px 14px;
+    background: #2a2a2a;
+    color: #90ee90;
+    border: 1px solid #3a5a3a;
+    border-radius: 6px;
+    font-size: 12px;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.archive-dl-btn:hover {
+    background: #1e3a1e;
+    border-color: #4CAF50;
+    color: #afffaf;
+}
+
+.archive-na-badge {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+}
