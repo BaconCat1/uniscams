@@ -113,7 +113,7 @@ async function loadPlayers() {
         if (window.DEBUG) console.log(`[uniscams] worker ${workerIdx + 1} finished`);
     });
 
-    await Promise.all([discordPromise, ...workers]);
+    const [discordResult] = await Promise.all([discordPromise, ...workers]);
 
     const loadMs = performance.now() - loadStart;
     const loadSec = (loadMs / 1000).toFixed(2);
@@ -134,6 +134,16 @@ async function loadPlayers() {
     if (window.DEBUG) {
         const totalSec = ((performance.now() - totalStart) / 1000).toFixed(2);
         console.log(`[uniscams] total load time: ${totalSec}s (config + discord + crafty + render)`);
+        console.log(`[uniscams] ── load report ──────────────────────────────`);
+        console.log(`[uniscams]   players : ${success}/${all.length} ok, ${failedPlayers.size} failed  (${loadSec}s)`);
+        if (discordResult) {
+            console.log(`[uniscams]   discord : ${discordResult.successCount}/${discordResult.total} ok, ${discordResult.failCount} failed  (${discordResult.resolveSec}s)`);
+        }
+        const lsF = window._lsWriteFailures();
+        const lsTotal = lsF.players + lsF.discord;
+        console.log(`[uniscams]   localStorage : ${lsTotal === 0 ? "no write failures" : `${lsF.players} player + ${lsF.discord} discord write failures`}`);
+        console.log(`[uniscams]   total   : ${totalSec}s`);
+        console.log(`[uniscams] ─────────────────────────────────────────────`);
     }
 
     window.players = players;

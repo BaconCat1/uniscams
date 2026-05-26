@@ -63,6 +63,13 @@ async function loadDiscordData() {
 }
 
 /* LOCALSTORAGE CACHING PIPELINE */
+let _lsPlayerWriteFailures  = 0;
+let _lsDiscordWriteFailures = 0;
+window._lsWriteFailures = () => ({
+    players: _lsPlayerWriteFailures,
+    discord: _lsDiscordWriteFailures
+});
+
 function getCachedPlayer(uuid) {
     const raw = localStorage.getItem(`player:${uuid}`);
     if (!raw) return null;
@@ -76,10 +83,15 @@ function getCachedPlayer(uuid) {
 }
 
 function setCachedPlayer(uuid, data) {
-    localStorage.setItem(`player:${uuid}`, JSON.stringify({
-        time: Date.now(),
-        data: data
-    }));
+    try {
+        localStorage.setItem(`player:${uuid}`, JSON.stringify({
+            time: Date.now(),
+            data: data
+        }));
+    } catch (e) {
+        _lsPlayerWriteFailures++;
+        if (window.DEBUG) console.warn(`[uniscams] localStorage write failed for player:${uuid}`, e.name, e.message);
+    }
 }
 
 /* ========================================================
@@ -99,10 +111,15 @@ function getCachedDiscordUser(id) {
 }
 
 function setCachedDiscordUser(id, data) {
-    localStorage.setItem(`discord:${id}`, JSON.stringify({
-        time: Date.now(),
-        data: data
-    }));
+    try {
+        localStorage.setItem(`discord:${id}`, JSON.stringify({
+            time: Date.now(),
+            data: data
+        }));
+    } catch (e) {
+        _lsDiscordWriteFailures++;
+        if (window.DEBUG) console.warn(`[uniscams] localStorage write failed for discord:${id}`, e.name, e.message);
+    }
 }
 
 async function fetchLiveDiscordUser(id) {
@@ -152,6 +169,8 @@ async function resolveDiscordUsers(ids) {
     const resolveMs = performance.now() - resolveStart;
     const resolveSec = (resolveMs / 1000).toFixed(2);
     console.log(`[uniscams] resolved ${successCount}/${total} discord accounts in ${resolveSec}s (${failCount} failed)`);
+
+    return { successCount, failCount, total, resolveSec };
 }
 
 /* Rate limit pause setup */
