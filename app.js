@@ -31,14 +31,29 @@ async function loadPlayers() {
     const queue = [...all];
     const retryCounts = new Map();
     const MAX_RETRIES = 3;
+    const RATE_LIMITED = window._craftyRateLimited;
 
     const loadStart = performance.now();
 
-    // Fire asynchronous worker threads concurrently
-    const workers = Array.from({ length: 5 }, async () => {
+    // 3 concurrent workers — parallel throughput without excessive bursting.
+    // Each worker awaits the rate-limit pause *before dequeuing* so no request
+    // is started while the window is closed. On a 429 (RATE_LIMITED sentinel)
+    // the UUID is re-queued without burning a retry attempt.
+    const workers = Array.from({ length: 3 }, async () => {
         while (queue.length) {
+            // Wait out any active rate-limit window before touching the queue
+            const pause = getRateLimitPause();
+            if (pause) await pause;
+
+            if (!queue.length) break;
             const uuid = queue.shift();
             const data = await fetchPlayer(uuid);
+
+            if (data === RATE_LIMITED) {
+                // Don't count this as a retry — just put it back
+                queue.push(uuid);
+                continue;
+            }
 
             if (data) {
                 players.set(uuid, data);
@@ -71,7 +86,7 @@ async function loadPlayers() {
     const success = all.length - failedPlayers.size;
     console.log(
         `[uniscams] loaded ${success}/${all.length} players in ${loadSec}s` +
-        ` (REQUEST_DELAY: ${REQUEST_DELAY}ms, ${failedPlayers.size} failed)`
+        ` (${failedPlayers.size} failed)`
     );
 
     renderPlayers();
@@ -109,16 +124,27 @@ async function retryFailedPlayers() {
     const allCount = [...new Set([...uuids, ...allAltUuids])].length;
     let loaded = allCount - queue.length;
 
+    const RATE_LIMITED = window._craftyRateLimited;
+
     if (typeof loadingScreen !== 'undefined' && loadingScreen) {
         loadingScreen.style.display = "block";
     }
 
-    const workers = Array.from({ length: 5 }, async () => {
+    const workers = Array.from({ length: 3 }, async () => {
         const retryCounts = new Map();
         const MAX_RETRIES = 3;
         while (queue.length) {
+            const pause = getRateLimitPause();
+            if (pause) await pause;
+
+            if (!queue.length) break;
             const uuid = queue.shift();
             const data = await fetchPlayer(uuid);
+
+            if (data === RATE_LIMITED) {
+                queue.push(uuid);
+                continue;
+            }
 
             if (data) {
                 players.set(uuid, data);
