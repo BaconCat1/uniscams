@@ -27,10 +27,6 @@ async function loadPlayers() {
     // ====================================================
     // PRE-FETCH LIVE DISCORD ACCOUNTS
     // ====================================================
-    if (typeof loadingText !== 'undefined' && loadingText) {
-        loadingText.innerText = `Resolving Discord accounts...`;
-    }
-
     const allDiscordIds = new Set();
     
     // Extract linked IDs
@@ -46,8 +42,6 @@ async function loadPlayers() {
             allDiscordIds.add(entry.discordId);
         }
     });
-
-    await resolveDiscordUsers([...allDiscordIds]);
     // ====================================================
 
     // Expose unlinked globally right away for ui.js scope mapping security
@@ -56,7 +50,6 @@ async function loadPlayers() {
     // Deduplicate profiles to determine total distinct profiles needed.
     const allAltUuids = Object.values(altMap).flat();
     const all = [...new Set([...uuids, ...allAltUuids])];
-    if (window.DEBUG) console.log(`[uniscams] discord pre-fetch complete — starting player load (${all.length} profiles across 3 workers)`);
 
     let loaded = 0;
     const queue = [...all];
@@ -71,6 +64,12 @@ async function loadPlayers() {
     // the per-player renderPlayers() call; now that renderPlayers() only
     // runs once after Promise.all we must do it explicitly here.
     initUI();
+
+    // Discord resolution (JAPI) and Crafty player fetching hit separate APIs
+    // with separate rate limits — run them in parallel. renderPlayers() only
+    // fires once both are done, so Discord usernames are always ready in time.
+    if (window.DEBUG) console.log(`[uniscams] starting discord resolution and player load in parallel (${all.length} profiles, ${allDiscordIds.size} discord IDs)`);
+    const discordPromise = resolveDiscordUsers([...allDiscordIds]);
 
     const workers = Array.from({ length: 3 }, async (_, workerIdx) => {
         while (queue.length) {
@@ -113,7 +112,7 @@ async function loadPlayers() {
         if (window.DEBUG) console.log(`[uniscams] worker ${workerIdx + 1} finished`);
     });
 
-    await Promise.all(workers);
+    await Promise.all([discordPromise, ...workers]);
 
     const loadMs = performance.now() - loadStart;
     const loadSec = (loadMs / 1000).toFixed(2);
