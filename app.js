@@ -125,15 +125,9 @@ function setupSearchFilter() {
     searchInput.addEventListener("input", (e) => {
         const query = e.target.value.toLowerCase().trim();
 
-        // Cards use class "player" per style.css
-        const cards = container.getElementsByClassName("player");
-
-        // Loop cards array to verify parameters against users
-        let index = 0;
-
         for (const mainUuid of uuids) {
 
-            const card = cards[index++];
+            const card = container.querySelector(`[data-uuid="${mainUuid}"]`);
 
             if (!card) continue;
 

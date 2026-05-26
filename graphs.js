@@ -495,8 +495,15 @@ function renderStats() {
     const cServers = document.getElementById("canvasServers");
     const ctxServers = cServers.getContext("2d");
 
+    const imgToName = {
+        "unez.png": "Uneasy Vanilla",
+        "sv.png":   "Simply Vanilla",
+        "axn.png":  "Anarchy Network",
+        "pv.png":   "Purity Vanilla",
+        "rv.png":   "Refined Vanilla"
+    };
+
     const counts = {};
-    const names = {};
 
     Object.entries(data.serverTags).forEach(([uuid, info]) => {
 
@@ -504,10 +511,6 @@ function renderStats() {
 
         counts[info.img] =
             (counts[info.img] || 0) + 1;
-
-        if (info.name) {
-            names[info.img] = info.name;
-        }
     });
 
     const entries = Object.entries(counts);
@@ -603,7 +606,7 @@ function renderStats() {
         if (!e2) return;
 
         showTip(
-            `${e2[1]}`,
+            `${imgToName[e2[0]] || e2[0]}: ${e2[1]}`,
             e.clientX + 15,
             e.clientY + 15
         );

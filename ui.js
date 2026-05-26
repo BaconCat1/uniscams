@@ -63,6 +63,7 @@ function renderPlayers() {
 
         const card = document.createElement("div");
         card.className = "player";
+        card.dataset.uuid = mainUuid;
 
         const head = `https://mc-heads.net/head/${mainUuid}.png`;
 
