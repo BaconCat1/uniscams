@@ -350,7 +350,7 @@ function renderUnlinkedPlayers() {
 
         const displayName = entry.name || "Unknown Player";
 
-        const discordId = entry.discordId;
+        const discordIds = entry.discordLinks || [];
 
         const note = entry.note || "";
 
@@ -416,69 +416,70 @@ function renderUnlinkedPlayers() {
 
         let discordHTML = "";
 
-        if (discordId) {
-
-            const dUser = getDiscordUser(discordId);
-
-            const avatar =
-                dUser ? getDiscordAvatar(dUser) : "";
-
-            const globalName = dUser
-                ? (dUser.global_name || dUser.username || discordId)
-                : discordId;
-
-            const username = dUser?.username || "";
+        if (discordIds.length) {
 
             discordHTML = `
                 <details class="section">
-                    <summary>Discord Account</summary>
+                    <summary>Discord Accounts (${discordIds.length})</summary>
 
                     <div class="alt-entry">
+                        ${discordIds.map(id => {
 
-                        <div class="discord-card">
+                            const dUser = getDiscordUser(id);
 
-                            ${
-                                avatar
-                                    ? `
-                                        <img
-                                            class="discord-avatar"
-                                            src="${avatar}"
-                                            width="40"
-                                            height="40"
-                                        >
-                                    `
-                                    : `
-                                        <div
-                                            class="discord-avatar"
-                                            style="
-                                                width:40px;
-                                                height:40px;
-                                                background:#1e1f22;
-                                            "
-                                        ></div>
-                                    `
-                            }
+                            const avatar =
+                                dUser ? getDiscordAvatar(dUser) : "";
 
-                            <div class="discord-info">
+                            const displayName = dUser
+                                ? (dUser.global_name || dUser.username || id)
+                                : id;
 
-                                <a
-                                    href="https://discord.com/users/${discordId}"
-                                    target="_blank"
-                                >
-                                    ${globalName}
+                            const username = dUser?.username || "";
+
+                            return `
+                                <div class="discord-card">
+
                                     ${
-                                        username &&
-                                        username !== globalName
-                                            ? ` (@${username})`
-                                            : ""
+                                        avatar
+                                            ? `
+                                                <img
+                                                    class="discord-avatar"
+                                                    src="${avatar}"
+                                                    width="40"
+                                                    height="40"
+                                                >
+                                            `
+                                            : `
+                                                <div
+                                                    class="discord-avatar"
+                                                    style="
+                                                        width:40px;
+                                                        height:40px;
+                                                        background:#1e1f22;
+                                                    "
+                                                ></div>
+                                            `
                                     }
-                                </a>
 
-                                <span class="discord-id">
-                                    ${discordId}
-                                </span>
-                            </div>
-                        </div>
+                                    <div class="discord-info">
+                                        <a
+                                            href="https://discord.com/users/${id}"
+                                            target="_blank"
+                                        >
+                                            ${displayName}
+                                            ${
+                                                username &&
+                                                username !== displayName
+                                                    ? ` (@${username})`
+                                                    : ""
+                                            }
+                                        </a>
+
+                                        <span class="discord-id">${id}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join("")}
                     </div>
                 </details>
             `;
