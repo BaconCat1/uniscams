@@ -126,8 +126,10 @@ async function resolveDiscordUsers(ids) {
             if (liveData) {
                 discordData[id] = liveData; // Overwrite fallback with live payload
                 successCount++;
+                if (window.DEBUG) console.log(`[uniscams] discord resolved: ${liveData.username ?? liveData.global_name ?? id} (${id})`);
             } else {
                 failCount++;
+                if (window.DEBUG) console.log(`[uniscams] discord failed to resolve: ${id}`);
             }
         }));
     }
@@ -148,7 +150,7 @@ function _setRateLimitPause(headers) {
     const waitMs = reset
         ? Math.max(0, new Date(reset).getTime() - Date.now())
         : parseInt((headers && headers.get("retry-after")) || "10", 10) * 1000;
-    console.log(`[uniscams] rate-limit pause ${(waitMs / 1000).toFixed(1)}s`);
+    if (window.DEBUG) console.log(`[uniscams] rate-limit pause ${(waitMs / 1000).toFixed(1)}s`);
     rateLimitPause = wait(waitMs).then(() => { rateLimitPause = null; });
 }
 

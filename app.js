@@ -56,6 +56,7 @@ async function loadPlayers() {
     // Deduplicate profiles to determine total distinct profiles needed.
     const allAltUuids = Object.values(altMap).flat();
     const all = [...new Set([...uuids, ...allAltUuids])];
+    if (window.DEBUG) console.log(`[uniscams] discord pre-fetch complete — starting player load (${all.length} profiles across 3 workers)`);
 
     let loaded = 0;
     const queue = [...all];
@@ -71,7 +72,7 @@ async function loadPlayers() {
     // runs once after Promise.all we must do it explicitly here.
     initUI();
 
-    const workers = Array.from({ length: 3 }, async () => {
+    const workers = Array.from({ length: 3 }, async (_, workerIdx) => {
         while (queue.length) {
             const pause = getRateLimitPause();
             if (pause) await pause;
@@ -81,6 +82,7 @@ async function loadPlayers() {
             const data = await fetchPlayer(uuid);
 
             if (data === RATE_LIMITED) {
+                if (window.DEBUG) console.log(`[uniscams] worker ${workerIdx + 1} rate limited — re-queuing ${uuid} (queue length: ${queue.length + 1})`);
                 queue.push(uuid);
                 continue;
             }
@@ -88,15 +90,17 @@ async function loadPlayers() {
             if (data) {
                 players.set(uuid, data);
                 loaded++;
-                if (window.DEBUG) console.log(`[uniscams] player loaded: ${data.username} (${uuid}) [${loaded}/${all.length}]`);
+                if (window.DEBUG) console.log(`[uniscams] worker ${workerIdx + 1} loaded: ${data.username} (${uuid}) [${loaded}/${all.length}]`);
             } else {
                 const attempts = (retryCounts.get(uuid) || 0) + 1;
                 if (attempts < MAX_RETRIES) {
                     retryCounts.set(uuid, attempts);
-                    queue.push(uuid); 
+                    queue.push(uuid);
+                    if (window.DEBUG) console.log(`[uniscams] worker ${workerIdx + 1} retry ${attempts}/${MAX_RETRIES - 1}: ${uuid}`);
                 } else {
                     failedPlayers.add(uuid);
                     loaded++;
+                    if (window.DEBUG) console.log(`[uniscams] worker ${workerIdx + 1} gave up on ${uuid} after ${MAX_RETRIES} attempts`);
                 }
             }
 
@@ -106,6 +110,7 @@ async function loadPlayers() {
 
             showRetryBanner();
         }
+        if (window.DEBUG) console.log(`[uniscams] worker ${workerIdx + 1} finished`);
     });
 
     await Promise.all(workers);
@@ -118,6 +123,7 @@ async function loadPlayers() {
         ` (${failedPlayers.size} failed)`
     );
 
+    if (window.DEBUG) console.log(`[uniscams] renderPlayers() firing — painting ${players.size} players to DOM`);
     renderPlayers();
     showRetryBanner();
 
