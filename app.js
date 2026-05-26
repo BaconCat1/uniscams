@@ -2,6 +2,11 @@
    APPLICATION ORCHESTRATOR (app.js)
    ======================================================== */
 
+/* DEBUG FLAG — append ?debug to the URL to enable verbose logging */
+window.DEBUG = new URLSearchParams(window.location.search).has('debug');
+window.enableDebug  = () => { window.DEBUG = true; };
+window.disableDebug = () => { window.DEBUG = false; };
+
 /* BOOTSTRAP PIPELINE */
 async function loadPlayers() {
     await loadConfig();
@@ -60,6 +65,12 @@ async function loadPlayers() {
 
     const loadStart = performance.now();
 
+    // Ensure loadingText (and other UI refs) are initialised before the
+    // worker loop starts ticking. Previously this happened implicitly via
+    // the per-player renderPlayers() call; now that renderPlayers() only
+    // runs once after Promise.all we must do it explicitly here.
+    initUI();
+
     const workers = Array.from({ length: 3 }, async () => {
         while (queue.length) {
             const pause = getRateLimitPause();
@@ -77,6 +88,7 @@ async function loadPlayers() {
             if (data) {
                 players.set(uuid, data);
                 loaded++;
+                if (window.DEBUG) console.log(`[uniscams] player loaded: ${data.username} (${uuid}) [${loaded}/${all.length}]`);
             } else {
                 const attempts = (retryCounts.get(uuid) || 0) + 1;
                 if (attempts < MAX_RETRIES) {
@@ -92,7 +104,6 @@ async function loadPlayers() {
                 loadingText.innerText = `Loading ${loaded}/${all.length}`;
             }
 
-            renderPlayers();
             showRetryBanner();
         }
     });
