@@ -97,7 +97,7 @@
 	<details class="section">
         <summary><strong>Is Discord account information being pulled live like Minecraft UUIDs?</strong></summary>
         <div style="margin-top:10px;">
-            <b>No</b>. I couldn't find a clean way to pull live Discord account data without a bot sitting in the middle, and the goal was for this page to be static so that was a no go. The compromise is the bot reads the Discord account info based on the <code>data.json</code> file the page uses, and generates a <code>discord.json</code> file with the Discord account information. While it isn't pulling it live, Discord User IDs are static in the same way Minecraft UUIDs are, which means opening the account from this page in discord by clicking on it will get you the correct account, even if the scammer has changed their Discord username/avatar.
+            <b>Yes, by default</b>. The page attempts to resolve Discord User IDs using a live API, and if that fails, it fallsback to a <code>discord.json</code> file that's generated from the <code>data.json</code> file that contains all the data for the page. Even if the user data is out of date, clicking on the link to their profile will always bring up their current account details.
         </div>
     </details>
 	
