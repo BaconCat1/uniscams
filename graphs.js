@@ -211,7 +211,7 @@ function renderStats() {
             "2-5": 0,
             "6-10": 0,
             "11-20": 0,
-            "21-30": 0
+            "21-30+": 0
         };
 
         // Parse username histories
@@ -245,7 +245,7 @@ function renderStats() {
 
             } else if (changes >= 21) {
 
-                usernameMetrics["21-30"]++;
+                usernameMetrics["21-30+"]++;
             }
         });
 

@@ -247,3 +247,12 @@ details.section summary {
     padding: 10px;
     max-width: 100%;
 }
+/* =====================
+   SEARCH HIGHLIGHTS
+===================== */
+mark.search-highlight {
+    background: #b5851b;
+    color: white;
+    border-radius: 2px;
+    padding: 0 1px;
+}

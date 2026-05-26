@@ -117,6 +117,50 @@ async function retryFailedPlayers() {
     if (window.renderStats) window.renderStats();
 }
 
+/* SEARCH HIGHLIGHT ENGINE */
+function highlightMatches(el, query) {
+
+    // Remove any existing highlights and restore plain text nodes
+    el.querySelectorAll("mark.search-highlight").forEach(mark => {
+        mark.replaceWith(mark.textContent);
+    });
+    el.normalize();
+
+    if (!query) return;
+
+    // Walk only text nodes — skips attribute values, scripts, etc.
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    for (const node of nodes) {
+        const text = node.textContent;
+        const lower = text.toLowerCase();
+        if (!lower.includes(query)) continue;
+
+        const frag = document.createDocumentFragment();
+        let last = 0;
+        let idx;
+
+        while ((idx = lower.indexOf(query, last)) !== -1) {
+            if (idx > last) {
+                frag.appendChild(document.createTextNode(text.slice(last, idx)));
+            }
+            const mark = document.createElement("mark");
+            mark.className = "search-highlight";
+            mark.textContent = text.slice(idx, idx + query.length);
+            frag.appendChild(mark);
+            last = idx + query.length;
+        }
+
+        if (last < text.length) {
+            frag.appendChild(document.createTextNode(text.slice(last)));
+        }
+
+        node.replaceWith(frag);
+    }
+}
+
 /* LIVE USER INTERACTION SEARCH ENGINE ARCHITECTURE */
 function setupSearchFilter() {
     const searchInput = document.getElementById("player-search");
@@ -138,6 +182,7 @@ function setupSearchFilter() {
             if (query === "") {
 
                 card.style.display = "";
+                highlightMatches(card, "");
 
                 // Close all dropdowns when search cleared
                 const details = card.querySelectorAll("details");
@@ -253,6 +298,7 @@ function setupSearchFilter() {
                 matchDiscord;
 
             card.style.display = matches ? "" : "none";
+            if (matches) highlightMatches(card, query);
 
             /* =========================
                AUTO OPEN DROPDOWNS
