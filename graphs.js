@@ -40,6 +40,22 @@ function hideTip() {
     }
 }
 
+/* Normalise the inconsistent unlinked discord fields into a flat array of IDs */
+function getUnlinkedDiscordIds(entry) {
+    if (Array.isArray(entry.discordLinks)) {
+        return entry.discordLinks.filter(Boolean);
+    }
+    if (entry.discordId) {
+        return [entry.discordId];
+    }
+    return [];
+}
+
+/* Normalise the inconsistent unlinked alts field into a count */
+function getUnlinkedAltCount(entry) {
+    return Array.isArray(entry.alts) ? entry.alts.length : 0;
+}
+
 function renderStats() {
     const data = getStatsData();
 
@@ -47,6 +63,7 @@ function renderStats() {
 
     // Shared data from app.js
     const playerMap = window.players || new Map();
+    const unlinked  = window.unlinked || [];
 
     // Text container
     const textContainer = document.getElementById("statsText");
@@ -60,16 +77,20 @@ function renderStats() {
        ======================================================== */
 
     let totalLinkedAlts = 0;
-    let absoluteScammers = data.uuids.length;
 
-    // System detected alts
+    // System detected alts (linked accounts only)
     Object.values(data.altMap).forEach(arr => {
         totalLinkedAlts += arr.length;
     });
 
-    // Manual alts
+    // Manual alts (linked accounts only)
     Object.values(data.manualAlts || {}).forEach(arr => {
         totalLinkedAlts += arr.length;
+    });
+
+    // Alts from unlinked entries
+    unlinked.forEach(entry => {
+        totalLinkedAlts += getUnlinkedAltCount(entry);
     });
 
     let discordCount = 0;
@@ -77,6 +98,13 @@ function renderStats() {
     Object.values(data.discordLinks).forEach(arr => {
         discordCount += arr.length;
     });
+
+    // Discords from unlinked entries
+    unlinked.forEach(entry => {
+        discordCount += getUnlinkedDiscordIds(entry).length;
+    });
+
+    const absoluteScammers = data.uuids.length + unlinked.length;
 
     // Stats text
     if (textContainer) {
@@ -214,40 +242,32 @@ function renderStats() {
             "21-30+": 0
         };
 
-        // Parse username histories
+        // Parse username histories for linked players
         playerMap.forEach(player => {
 
             const history =
                 player.usernames || [];
 
-			const changes =
-				Math.max(0, history.length - 1);
+            const changes =
+                Math.max(0, history.length - 1);
 
             if (changes === 0) {
-
                 usernameMetrics["0"]++;
-
             } else if (changes === 1) {
-
                 usernameMetrics["1"]++;
-
             } else if (changes >= 2 && changes <= 5) {
-
                 usernameMetrics["2-5"]++;
-
             } else if (changes >= 6 && changes <= 10) {
-
                 usernameMetrics["6-10"]++;
-
             } else if (changes >= 11 && changes <= 20) {
-
                 usernameMetrics["11-20"]++;
-
             } else if (changes >= 21) {
-
                 usernameMetrics["21-30+"]++;
             }
         });
+
+        // Unlinked players have no crafty profile, so 0 known name changes each
+        usernameMetrics["0"] += unlinked.length;
 
         const usernameEntries =
             Object.entries(usernameMetrics).map(
@@ -364,30 +384,34 @@ function renderStats() {
             "5+": 0
         };
 
-        // Count alt associations per main account
+        // Count alt associations per linked main account
         data.uuids.forEach(uuid => {
 
             let altCount = 0;
 
-            // Automatic alt map
             if (data.altMap[uuid]) {
                 altCount += data.altMap[uuid].length;
             }
 
-            // Manual alt map
             if (data.manualAlts &&
                 data.manualAlts[uuid]) {
-
                 altCount +=
                     data.manualAlts[uuid].length;
             }
 
             if (altCount >= 5) {
-
                 altMetrics["5+"]++;
-
             } else {
+                altMetrics[String(altCount)]++;
+            }
+        });
 
+        // Count alt associations for unlinked entries
+        unlinked.forEach(entry => {
+            const altCount = getUnlinkedAltCount(entry);
+            if (altCount >= 5) {
+                altMetrics["5+"]++;
+            } else {
                 altMetrics[String(altCount)]++;
             }
         });
@@ -505,12 +529,21 @@ function renderStats() {
 
     const counts = {};
 
+    // Linked players
     Object.entries(data.serverTags).forEach(([uuid, info]) => {
 
         if (!info.img) return;
 
         counts[info.img] =
             (counts[info.img] || 0) + 1;
+    });
+
+    // Unlinked players — each has a tags array with one or more {img, link} entries
+    unlinked.forEach(entry => {
+        (entry.tags || []).forEach(tag => {
+            if (!tag.img) return;
+            counts[tag.img] = (counts[tag.img] || 0) + 1;
+        });
     });
 
     const entries = Object.entries(counts);
