@@ -66,4 +66,4 @@ Supplementary sources for various data points that don't fit anywhere else
 
 ## Data
 
-All scammer data is maintained manually in `data.json`. UUIDs were determined manually. See the FAQ on the page for methodology details.
+All scammer data is maintained manually in `data.json`. New data can be appended with `admin.html`. UUIDs were determined manually. See the FAQ on the page for methodology details.
