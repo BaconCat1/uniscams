@@ -337,9 +337,14 @@ function renderPlayers() {
     if (countEl) {
         const total = (uuids || []).length + (window.unlinked || []).length;
         const failed = (window.failedPlayers || new Set()).size;
+        const serverCount = new Set([
+            ...Object.values(serverTags || {}).map(t => t.img).filter(Boolean),
+            ...(window.unlinked || []).flatMap(e => (e.tags || []).map(t => t.img).filter(Boolean))
+        ]).size;
+        const baseText = `${total} known scammers across ${serverCount} server${serverCount !== 1 ? "s" : ""}`;
         countEl.textContent = failed > 0
-            ? `${total} players listed  •  ${failed} failed to load`
-            : `${total} players listed`;
+            ? `${baseText}  •  ${failed} failed to load`
+            : baseText;
     }
 }
 
