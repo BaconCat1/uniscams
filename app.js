@@ -9,6 +9,7 @@ window.disableDebug = () => { window.DEBUG = false; };
 
 /* BOOTSTRAP PIPELINE */
 async function loadPlayers() {
+    const totalStart = performance.now();
     await loadConfig();
 
     // Convert alt -> main  INTO  main -> [alts]
@@ -128,6 +129,11 @@ async function loadPlayers() {
 
     if (typeof loadingScreen !== 'undefined' && loadingScreen) {
         loadingScreen.style.display = "none";
+    }
+
+    if (window.DEBUG) {
+        const totalSec = ((performance.now() - totalStart) / 1000).toFixed(2);
+        console.log(`[uniscams] total load time: ${totalSec}s (config + discord + crafty + render)`);
     }
 
     window.players = players;
