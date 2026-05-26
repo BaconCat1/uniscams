@@ -109,6 +109,7 @@ function renderStats() {
     // Stats text
     if (textContainer) {
         textContainer.innerHTML = `
+            <p>• <strong>Total:</strong> ${absoluteScammers + totalLinkedAlts}</p>
             <p>• <strong>Mains:</strong> ${absoluteScammers}</p>
             <p>• <strong>Alts:</strong> ${totalLinkedAlts}</p>
             <p>• <strong>Discords:</strong> ${discordCount}</p>
@@ -130,6 +131,10 @@ function renderStats() {
     const ctxStats = cStats.getContext("2d");
 
     const metrics = [
+        {
+            label: "Total",
+            val: absoluteScammers + totalLinkedAlts
+        },
         {
             label: "Mains",
             val: absoluteScammers

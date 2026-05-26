@@ -132,6 +132,7 @@ async function loadPlayers() {
     }
 
     window.players = players;
+    window.uuids = uuids;
     window.statsData = {
         uuids: uuids,
         altMap: altMap,
@@ -143,6 +144,16 @@ async function loadPlayers() {
     if (window.renderStats) window.renderStats();
 
     setupSearchFilter();
+
+    // Restore search query from URL (e.g. a shared ?q=playername link)
+    const initialQuery = new URLSearchParams(window.location.search).get("q");
+    if (initialQuery) {
+        const searchInput = document.getElementById("player-search");
+        if (searchInput) {
+            searchInput.value = initialQuery;
+            searchInput.dispatchEvent(new Event("input"));
+        }
+    }
 }
 
 /* RETRY PIPELINE LINKED TO RETRY BANNER */
@@ -254,9 +265,35 @@ function setupSearchFilter() {
     const searchInput = document.getElementById("player-search");
     if (!searchInput) return;
 
+    const copyBtn = document.getElementById("copy-search-btn");
+
+    if (copyBtn) {
+        copyBtn.addEventListener("click", () => {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                copyBtn.textContent = "Copied!";
+                setTimeout(() => { copyBtn.textContent = "Copy search link"; }, 2000);
+            });
+        });
+    }
+
     searchInput.addEventListener("input", (e) => {
         const query = e.target.value.toLowerCase().trim();
         let visibleCount = 0;
+
+        // Keep address bar in sync so the current search is always shareable
+        const params = new URLSearchParams(window.location.search);
+        if (query) {
+            params.set("q", query);
+        } else {
+            params.delete("q");
+        }
+        const newUrl = params.toString()
+            ? `${window.location.pathname}?${params}`
+            : window.location.pathname;
+        history.replaceState(null, "", newUrl);
+
+        // Show/hide the copy button based on whether there's an active search
+        if (copyBtn) copyBtn.style.display = query ? "block" : "none";
 
         /* ========================================================
            PART A: FILTER STANDARD PLAYER CARDS (MAIN ACCOUNTS)

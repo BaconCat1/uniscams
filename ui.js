@@ -330,6 +330,17 @@ function renderPlayers() {
     }
 
     renderUnlinkedPlayers();
+    renderFailedPlayers();
+
+    // Update the "X players listed" count line above the list
+    const countEl = document.getElementById("player-count");
+    if (countEl) {
+        const total = (uuids || []).length + (window.unlinked || []).length;
+        const failed = (window.failedPlayers || new Set()).size;
+        countEl.textContent = failed > 0
+            ? `${total} players listed  •  ${failed} failed to load`
+            : `${total} players listed`;
+    }
 }
 
 /* ========================================================
@@ -549,6 +560,52 @@ function renderUnlinkedPlayers() {
             ${unlinkedAltHTML}
             ${discordHTML}
             ${metadataHTML}
+        `;
+
+        container.appendChild(card);
+    }
+}
+
+/* ========================================================
+   RENDER PLACEHOLDER CARDS FOR FAILED PLAYERS
+   ======================================================== */
+function renderFailedPlayers() {
+    initUI();
+
+    if (!container) return;
+
+    const failed = window.failedPlayers;
+    if (!failed || failed.size === 0) return;
+
+    for (const uuid of failed) {
+        // Don't double-render if a card already exists (e.g. after retry)
+        if (container.querySelector(`[data-uuid="${uuid}"]`)) continue;
+
+        const card = document.createElement("div");
+        card.className = "player failed-profile";
+        card.dataset.uuid = uuid;
+
+        card.innerHTML = `
+            <div class="player-header">
+                <div style="
+                    width:64px;
+                    height:64px;
+                    border-radius:4px;
+                    background:#1b1b1b;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:28px;
+                    opacity:0.4;
+                ">?</div>
+
+                <div style="flex:1; min-width:0; opacity:0.5;">
+                    <div class="username" style="font-size:14px; font-weight:normal; font-style:italic;">
+                        Failed to load
+                    </div>
+                    <div class="uuid">${uuid}</div>
+                </div>
+            </div>
         `;
 
         container.appendChild(card);

@@ -201,6 +201,24 @@ details.section summary {
     width: 300px;
 }
 
+#copy-search-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 6px 12px;
+    background: #2a2a2a;
+    color: #aaa;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+#copy-search-btn:hover {
+    background: #333;
+    color: white;
+}
+
 #player-search {
     width: 100%;
     padding: 8px 12px;
@@ -255,4 +273,11 @@ mark.search-highlight {
     color: white;
     border-radius: 2px;
     padding: 0 1px;
+}
+
+/* Failed-to-load placeholder cards */
+.player.failed-profile {
+    border-left: 4px solid #444;
+    background: linear-gradient(145deg, #161616, #111);
+    opacity: 0.6;
 }
