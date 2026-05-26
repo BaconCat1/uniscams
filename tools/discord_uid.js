@@ -325,6 +325,25 @@ async function exportDiscord() {
 // =====================
 async function main() {
 
+    if (fs.existsSync("../index.html")) {
+        console.error(
+            "[ERROR] This script should not be run from inside the scammer list server directory.\n" +
+            "Move discord_uid.js to its own separate directory and run it from there.\n"
+        );
+        process.exit(1);
+    }
+
+    const token = process.env.DISCORD_BOT_TOKEN;
+
+    if (!token || token === "your_token_here") {
+        console.error(
+            "[ERROR] DISCORD_BOT_TOKEN is not set.\n" +
+            "Create a .env file with your bot token:\n\n" +
+            "  DISCORD_BOT_TOKEN=your_token_here\n"
+        );
+        process.exit(1);
+    }
+
     const args = process.argv.slice(2);
 
     if (args.includes("--export-discord")) {
